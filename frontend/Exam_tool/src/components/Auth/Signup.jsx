@@ -1,7 +1,7 @@
 import React from 'react';
 import { Container, Form, Button, Card } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import Signup_background from '../assets/signup_background.jpg';
+import Signup_background from '../../assets/signup_background.jpg';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
