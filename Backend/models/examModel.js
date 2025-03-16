@@ -29,19 +29,16 @@ const updateExam = async (examId, title, description, duration, questions, userI
   return result.rows[0];
 };
 
-const deleteExam = async (examId) => {
-  // Start a transaction
+const deleteExam = async (examId, userId) => {
   const client = await pool.connect();
-  
+
   try {
     await client.query('BEGIN');
-    
-    // First delete all related scores
     await client.query('DELETE FROM scores WHERE exam_id = $1', [examId]);
-    
-    // Then delete the exam
-    const result = await client.query('DELETE FROM exams WHERE id = $1 RETURNING *', [examId]);
-    
+    const result = await client.query(
+      'DELETE FROM exams WHERE id = $1 AND created_by = $2 RETURNING *',
+      [examId, userId]
+    );
     await client.query('COMMIT');
     return result.rows[0];
   } catch (error) {
@@ -52,10 +49,38 @@ const deleteExam = async (examId) => {
   }
 };
 
+const getExamAttendees = async (examId) => {
+  try {
+    const result = await pool.query(
+      `SELECT 
+         s.id AS score_id,
+         s.user_id,
+         s.score,
+         s.answers AS user_answers,
+         e.title AS exam_title,
+         e.questions AS exam_questions,
+         u.name AS user_name,
+         u.email AS user_email
+       FROM scores s
+       JOIN exams e ON s.exam_id = e.id
+       JOIN auth_user u ON s.user_id = u.id
+       WHERE s.exam_id = $1`,
+      [examId]
+    );
+    console.log('Query Result:', result.rows); // Log the result
+    return result.rows;
+  } catch (error) {
+    console.error('Error in getExamAttendees:', error);
+    throw error;
+  }
+};
+
+
 module.exports = {
   getExams,
   getExamsByUser,
   createExam,
   updateExam,
   deleteExam,
+  getExamAttendees
 };

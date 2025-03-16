@@ -6,10 +6,10 @@ import { Outlet } from 'react-router-dom';
 const MainDashboard = () => {
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'auto' }}>
-      {/* Sidebar */}
+
       <Sidebar />
 
-      {/* Main content area */}
+
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
         <Outlet />
       </div>

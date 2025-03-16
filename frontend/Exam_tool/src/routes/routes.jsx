@@ -17,11 +17,11 @@ const AppRoutes = () => {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
-      <Route path="/dashboard" element={<ProtectedRoute> <MainDashboard/> </ProtectedRoute>} > 
-              <Route path="" element={<HomePage />} /> 
-              <Route path="list-exams" element={<ListExams />} /> 
-              <Route path="create-exam" element={<CreateExam/>} /> 
-              <Route path="scores" element={<Scores />} />
+      <Route path="/dashboard" element={<ProtectedRoute> <MainDashboard /> </ProtectedRoute>} >
+        <Route path="" element={<HomePage />} />
+        <Route path="list-exams" element={<ListExams />} />
+        <Route path="create-exam" element={<CreateExam />} />
+        <Route path="scores" element={<Scores />} />
       </Route>
     </Routes>
   );

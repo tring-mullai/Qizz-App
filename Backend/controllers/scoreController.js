@@ -4,13 +4,12 @@ const submitScore = async (req, res) => {
   const { examId, score, answers, examTitle } = req.body;
   const userId = req.user.id;
 
-  if(!answers || typeof answers != "object")
-  {
-    return res.status(400).json({success:false,message:"Invalid answers format"});
+  if (!answers || typeof answers != "object") {
+    return res.status(400).json({ success: false, message: "Invalid answers format" });
   }
 
   try {
-    
+
 
     const newScore = await submitScoreModel(userId, examId, examTitle, score, answers);
     res.json({ success: true, data: newScore });

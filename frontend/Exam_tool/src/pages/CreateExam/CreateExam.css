@@ -1,0 +1,56 @@
+.examcreation_card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+}
+
+/* Hide the dropdown arrow */
+.dropdown-toggle::after {
+    display: none !important;
+}
+
+/* Style the three-dot button */
+.buttonthreedotcursor {
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+    background: none;
+    padding: 0;
+    font-size: 1.5rem;
+    color: #000;
+    /* Default color */
+    margin-bottom: 120px;
+}
+
+.buttonthreedotcursor:hover {
+    color: #007bff;
+    /* Change color on hover */
+}
+
+/* Position the dropdown menu next to the three dots */
+.dropdown-menu-custom {
+    position: absolute;
+    top: 0;
+    left: 100%;
+    margin-left: 5px;
+    /* Adjust spacing */
+    margin-bottom: 40px;
+    border: 1px solid #ddd;
+    /* Add border */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    /* Add shadow */
+}
+
+/* Style the dropdown item */
+.dropdown-item {
+    padding: 0.5rem 1rem;
+    /* Add padding */
+    font-size: 0.9rem;
+    /* Adjust font size */
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+    /* Change background on hover */
+}

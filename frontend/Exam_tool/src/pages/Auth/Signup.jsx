@@ -1,5 +1,5 @@
-import React from 'react';
-import { Container, Form, Button, Card } from 'react-bootstrap';
+import React, { useState } from 'react';
+import { Container, Form, Button, Card, InputGroup } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import Signup_background from '../../assets/signup_background.jpg';
 import { useForm } from 'react-hook-form';
@@ -7,12 +7,13 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const schema = yup.object().shape({
-  name: yup.string().min(3, 'Name must be at least 3 characters').required('Name is required'),
-  email: yup.string().email('Invalid email format').required('Email is required'),
-  password: yup.string().min(8, 'Password must be at least 8 characters').matches(/[0-9]/, 'Password must contain at least one number').required('Password is required'),
-  confirmPassword: yup.string().oneOf([yup.ref('password')], 'Passwords must match').required('Confirm password is required'),
+  name: yup.string().required('Name is required').min(3, 'Name must be at least 3 characters'),
+  email: yup.string().required('Email is required').email('Invalid email format'),
+  password: yup.string().required('Password is required').min(8, 'Password must be at least 8 characters').matches(/[0-9]/, 'Password must contain at least one number'),
+  confirmPassword: yup.string().required('Confirm password is required').oneOf([yup.ref('password')], 'Passwords must match')
 });
 
 const Signup = () => {
@@ -23,6 +24,20 @@ const Signup = () => {
     formState: { errors },
   } = useForm({ resolver: yupResolver(schema) });
 
+  const [password, setPassword] = useState("");
+  const [type, setType] = useState('password');
+  const [icon, setIcon] = useState(<FaEyeSlash />);
+
+  const handleToggle = () => {
+    if (type === 'password') {
+      setIcon(<FaEye />);
+      setType('text');
+    } else {
+      setIcon(<FaEyeSlash />);
+      setType('password');
+    }
+  };
+
   const onSubmit = async (data) => {
     try {
       delete data.confirmPassword;
@@ -31,7 +46,7 @@ const Signup = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(data)
       });
 
       let responseData;
@@ -43,9 +58,9 @@ const Signup = () => {
 
       if (res.ok) {
         toast.success('Signup successful!');
-        setTimeout(() => {
+        
           navigate('/login');
-        }, 1500);
+        
       } else {
         toast.error(responseData.message || 'Signup failed');
       }
@@ -76,13 +91,29 @@ const Signup = () => {
 
             <Form.Group className='mb-3'>
               <Form.Label>Password <sup className='text-danger'>*</sup></Form.Label>
-              <Form.Control type='password' {...register('password')} placeholder='Enter password' />
+              <InputGroup>
+                <Form.Control
+                  type={type}
+                  {...register('password')}
+                  placeholder='Enter password'
+                  
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <InputGroup.Text onClick={handleToggle} style={{ cursor: 'pointer' }}>
+                  {icon}
+                </InputGroup.Text>
+              </InputGroup>
               {errors.password && <small className='text-danger'>{errors.password.message}</small>}
             </Form.Group>
 
             <Form.Group className='mb-3'>
               <Form.Label>Confirm Password <sup className='text-danger'>*</sup></Form.Label>
-              <Form.Control type='password' {...register('confirmPassword')} placeholder='Confirm password' />
+              <InputGroup>
+                <Form.Control type={type} {...register('confirmPassword')} placeholder='Confirm password'  onChange={(e) => setPassword(e.target.value)} />
+                <InputGroup.Text onClick={handleToggle} style={{ cursor: 'pointer' }}>
+                  {icon}
+                </InputGroup.Text>
+              </InputGroup>
               {errors.confirmPassword && <small className='text-danger'>{errors.confirmPassword.message}</small>}
             </Form.Group>
 
@@ -95,7 +126,7 @@ const Signup = () => {
           </Link>
         </Card>
 
-        <ToastContainer position='top-right' autoClose={1500}/>
+        <ToastContainer position='top-right' autoClose={1500} />
       </Container>
       <div>
         <img src={Signup_background} alt='not_displayed' style={{ height: '100vh' }} />

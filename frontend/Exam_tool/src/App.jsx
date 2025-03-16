@@ -5,7 +5,7 @@ import AppRoutes from './routes/routes';
 
 const App = () => {
   return (
-    <BrowserRouter> 
+    <BrowserRouter>
       <AppRoutes />
     </BrowserRouter>
   );

@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
-import DashboardProvider from '../context/DashboardProvider'; 
+import DashboardProvider from '../context/DashboardProvider';
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("token");

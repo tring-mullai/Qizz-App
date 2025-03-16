@@ -1,8 +1,8 @@
-// contexts/DashboardContext.jsx
-import React, { createContext, useState, useContext, useCallback } from 'react';
+import React, { createContext, useState, useContext, useEffect,useCallback } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+
 
 
 const DashboardContext = createContext();
@@ -20,13 +20,13 @@ export const DashboardProvider = ({ children }) => {
   const [timeLeft, setTimeLeft] = useState(0);
   const [examSubmitted, setExamSubmitted] = useState(false);
   const [userName, setUserName] = useState('User');
-  const[attendedExams,setAttendedExams] = useState([]);
-  const[showConfirmation , setShowConfirmation] = useState(false);
-  const[showViewAnswers,setShowViewAnswers] = useState(false);
-  const[selectedScore,setSelectedScore] = useState(null);
+  const [attendedExams, setAttendedExams] = useState([]);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showViewAnswers, setShowViewAnswers] = useState(false);
+  const [selectedScore, setSelectedScore] = useState(null);
   const navigate = useNavigate();
 
- 
+
   const getUserInfo = useCallback(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -41,7 +41,7 @@ export const DashboardProvider = ({ children }) => {
     }
   }, []);
 
- 
+
   const fetchExams = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
@@ -56,7 +56,7 @@ export const DashboardProvider = ({ children }) => {
     }
   }, []);
 
-  // Fetch user's created exams
+
   const fetchMyExams = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
@@ -71,7 +71,7 @@ export const DashboardProvider = ({ children }) => {
     }
   }, []);
 
-  // Fetch scores
+
   const fetchScores = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
@@ -87,9 +87,8 @@ export const DashboardProvider = ({ children }) => {
     }
   }, []);
 
-  const fetchAttendedExams = async()=>
-  {
-    try{
+  const fetchAttendedExams = async () => {
+    try {
       const token = localStorage.getItem('token');
       const response = await axios.get('https://n3q3bv9g-5000.inc1.devtunnels.ms/api/scores/scores',
         {
@@ -98,19 +97,18 @@ export const DashboardProvider = ({ children }) => {
             Authorization: `Bearer ${token}`,
           },
         });
-        if (response.data.success) {
-          setScores(response.data.data || []);
-          
-          // Extract exam IDs for attended exams tracking
-          const examIDs = response.data.data.map(score => score.exam_id);
-          setAttendedExams(examIDs);
-        } else {
-          console.error("Failed to fetch scores:", response.data.message);
-          setScores([]);
-        }
-    }catch(error)
-    {
-      console.error('Failed to fetch attended exams',error);
+      if (response.data.success) {
+        setScores(response.data.data || []);
+
+
+        const examIDs = response.data.data.map(score => score.exam_id);
+        setAttendedExams(examIDs);
+      } else {
+        console.error("Failed to fetch scores:", response.data.message);
+        setScores([]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch attended exams', error);
     }
   }
 
@@ -118,55 +116,55 @@ export const DashboardProvider = ({ children }) => {
     return attendedExams.includes(examId);
   };
 
-  const handleConfirmSubmit = ()=>
-  {
+  const handleConfirmSubmit = () => {
     setShowConfirmation(false);
     handleSubmitExam();
   }
   const handleViewAnswers = (score) => {
-    console.log("Original score:", score); // Debug
-    
-    // Make sure we're working with a copy to avoid mutations
-    const processedScore = {...score};
-    
-    // Ensure answers is parsed
+    console.log("Original score:", score);
+
+
+    const processedScore = { ...score };
+
+
     try {
-      processedScore.answers = typeof score.answers === 'string' 
-        ? JSON.parse(score.answers) 
+      processedScore.answers = typeof score.answers === 'string'
+        ? JSON.parse(score.answers)
         : score.answers;
     } catch (error) {
       console.error("Error parsing answers:", error);
       processedScore.answers = {};
     }
-    
-    // Ensure questions is parsed
+
     try {
-      processedScore.questions = typeof score.questions === 'string' 
-        ? JSON.parse(score.questions) 
+      processedScore.questions = typeof score.questions === 'string'
+        ? JSON.parse(score.questions)
         : score.questions;
     } catch (error) {
       console.error("Error parsing questions:", error);
       processedScore.questions = [];
     }
-    
-    console.log("Processed score:", processedScore); // Debug
+
+    console.log("Processed score:", processedScore); 
     setSelectedScore(processedScore);
     setShowViewAnswers(true);
-};
-    
-    const handleCloseAnswers = () =>
-    {
-        setShowViewAnswers(false);
-        setSelectedScore(null)
-    }
+  };
 
-  // Handle input changes for exam creation/editing
+  const handleCloseAnswers = () => {
+    setShowViewAnswers(false);
+    setSelectedScore(null)
+  }
+
+
   const handleInput = (e) => {
     const { name, value } = e.target;
     setCurrentExam({ ...currentExam, [name]: value });
   };
 
-  // Handle exam submission (create/update)
+
+
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validQuestions = currentExam.questions.filter(
@@ -197,7 +195,7 @@ export const DashboardProvider = ({ children }) => {
     }
   };
 
-  // Handle editing an exam
+
   const handleEdit = (exam) => {
     let examToEdit = { ...exam };
     if (examToEdit.questions && typeof examToEdit.questions === 'string') {
@@ -214,7 +212,7 @@ export const DashboardProvider = ({ children }) => {
     setShowModal(true);
   };
 
-  // Handle deleting an exam
+
   const handleDelete = async (id) => {
     try {
       const token = localStorage.getItem('token');
@@ -230,7 +228,7 @@ export const DashboardProvider = ({ children }) => {
     }
   };
 
-  // Handle starting an exam
+
   const handleStartExam = (exam) => {
     let examToStart = { ...exam };
     if (examToStart.questions && typeof examToStart.questions === 'string') {
@@ -244,31 +242,31 @@ export const DashboardProvider = ({ children }) => {
     setExamInProgress(examToStart);
     setCurrentQuestionIndex(0);
     setSelectedAnswers({});
-    setTimeLeft(examToStart.duration * 60); // Convert minutes to seconds
+    setTimeLeft(examToStart.duration * 60);
     setExamSubmitted(false);
     setShowExamModal(true);
   };
 
-  // Handle selecting an answer
+
   const handleAnswerSelect = (questionIndex, answerIndex) => {
     setSelectedAnswers({ ...selectedAnswers, [questionIndex]: answerIndex });
   };
 
-  // Handle moving to the next question
+
   const handleNextQuestion = () => {
     if (currentQuestionIndex < examInProgress.questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     }
   };
 
-  // Handle moving to the previous question
+
   const handlePrevQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
     }
   };
 
-  // Handle submitting the exam
+
   const handleSubmitExam = async () => {
     if (!examSubmitted && examInProgress) {
       setExamSubmitted(true);
@@ -283,18 +281,18 @@ export const DashboardProvider = ({ children }) => {
         const token = localStorage.getItem('token');
         await axios.post(
           'https://n3q3bv9g-5000.inc1.devtunnels.ms/api/scores/scores',
-          { 
-            examId: examInProgress.id, 
-            examTitle: examInProgress.title, // Add this line
-            score, 
-            answers: selectedAnswers 
+          {
+            examId: examInProgress.id,
+            examTitle: examInProgress.title,
+            score,
+            answers: selectedAnswers
           },
           { headers: { Authorization: `Bearer ${token}` } }
         );
         console.log(selectedAnswers)
         toast.success('Exam submitted successfully!');
         setShowExamModal(false);
-        
+
         fetchScores();
         navigate('/dashboard/scores')
         fetchAttendedExams();
@@ -303,16 +301,16 @@ export const DashboardProvider = ({ children }) => {
         console.error(error);
       }
     }
-};
+  };
 
-  // Format time (minutes:seconds)
+
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
   };
 
-  // Handle logout
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/');
@@ -366,9 +364,9 @@ export const DashboardProvider = ({ children }) => {
         setShowViewAnswers,
         handleViewAnswers,
         handleCloseAnswers,
-        selectedScore,setSelectedScore,
-        handleLogout,
-        
+        selectedScore, setSelectedScore,
+        handleLogout
+
       }}
     >
       {children}
