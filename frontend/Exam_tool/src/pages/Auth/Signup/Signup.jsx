@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Form, Button, Card, InputGroup } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import Signup_background from '../../assets/signup_background.jpg';
+import Signup_background from '../../../assets/Signup_background.jpg';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -24,17 +24,29 @@ const Signup = () => {
     formState: { errors },
   } = useForm({ resolver: yupResolver(schema) });
 
-  const [password, setPassword] = useState("");
-  const [type, setType] = useState('password');
-  const [icon, setIcon] = useState(<FaEyeSlash />);
+  
+  const [passwordType, setPasswordType] = useState('password');
+  const [confirmPasswordType, setConfirmPasswordType] = useState('password');
+  const [passwordIcon, setPasswordIcon] = useState(<FaEyeSlash />);
+  const [confirmPasswordIcon, setConfirmPasswordIcon] = useState(<FaEyeSlash />);
 
-  const handleToggle = () => {
-    if (type === 'password') {
-      setIcon(<FaEye />);
-      setType('text');
+  const handlePasswordToggle = () => {
+    if (passwordType === 'password') {
+      setPasswordIcon(<FaEye />);
+      setPasswordType('text');
     } else {
-      setIcon(<FaEyeSlash />);
-      setType('password');
+      setPasswordIcon(<FaEyeSlash />);
+      setPasswordType('password');
+    }
+  };
+
+  const handleConfirmPasswordToggle = () => {
+    if (confirmPasswordType === 'password') {
+      setConfirmPasswordIcon(<FaEye />);
+      setConfirmPasswordType('text');
+    } else {
+      setConfirmPasswordIcon(<FaEyeSlash />);
+      setConfirmPasswordType('password');
     }
   };
 
@@ -59,7 +71,9 @@ const Signup = () => {
       if (res.ok) {
         toast.success('Signup successful!');
         
-          navigate('/login');
+        setTimeout(() => {
+          navigate('/login')
+        }, 1500);
         
       } else {
         toast.error(responseData.message || 'Signup failed');
@@ -93,14 +107,14 @@ const Signup = () => {
               <Form.Label>Password <sup className='text-danger'>*</sup></Form.Label>
               <InputGroup>
                 <Form.Control
-                  type={type}
+                  type={passwordType}
                   {...register('password')}
                   placeholder='Enter password'
                   
                   onChange={(e) => setPassword(e.target.value)}
                 />
-                <InputGroup.Text onClick={handleToggle} style={{ cursor: 'pointer' }}>
-                  {icon}
+                <InputGroup.Text onClick={handlePasswordToggle} style={{ cursor: 'pointer' }}>
+                  {passwordIcon}
                 </InputGroup.Text>
               </InputGroup>
               {errors.password && <small className='text-danger'>{errors.password.message}</small>}
@@ -109,20 +123,20 @@ const Signup = () => {
             <Form.Group className='mb-3'>
               <Form.Label>Confirm Password <sup className='text-danger'>*</sup></Form.Label>
               <InputGroup>
-                <Form.Control type={type} {...register('confirmPassword')} placeholder='Confirm password'  onChange={(e) => setPassword(e.target.value)} />
-                <InputGroup.Text onClick={handleToggle} style={{ cursor: 'pointer' }}>
-                  {icon}
+                <Form.Control type={confirmPasswordType} {...register('confirmPassword')} placeholder='Confirm password'  onChange={(e) => setConfirmPassword(e.target.value)} />
+                <InputGroup.Text onClick={handleConfirmPasswordToggle} style={{ cursor: 'pointer' }}>
+                  {confirmPasswordIcon}
                 </InputGroup.Text>
               </InputGroup>
               {errors.confirmPassword && <small className='text-danger'>{errors.confirmPassword.message}</small>}
             </Form.Group>
 
-            <Button type='submit' variant='primary' className='w-100 btn-lg'>Submit</Button>
+            <Button type='submit'  variant='primary' className='w-100 btn-lg submit-button '>Submit</Button>
           </Form>
 
           <p className='mt-3 mb-3 text-center'>Already have an account?</p>
           <Link to='/login' style={{ display: 'inline', marginLeft: '180px', width: '100px' }}>
-            <Button type='button' variant='success' style={{ width: '100px' }}>Login</Button>
+            <Button type='button' variant='secondary' style={{ width: '100px' }}>Login</Button>
           </Link>
         </Card>
 

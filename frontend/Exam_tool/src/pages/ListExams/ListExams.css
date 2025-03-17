@@ -1,0 +1,45 @@
+.custom-card
+{
+   border-color: #ba7a30 ;
+}
+
+.custom-card:hover{
+    overflow-x: hidden;
+}
+
+
+
+.Modal
+{
+    border-color: #ba7a30;
+}
+
+.custom-card-background
+{
+    background-color: #eeebe9;
+}
+
+.card-button-exam
+{
+
+    color: white;
+    background-color: #ba7a30;
+    border: none;
+    border-radius: 10rem;
+    font-weight: 16px;
+    
+}
+
+.card-button-exam:hover
+{
+    background-color: #feb509;
+}
+
+.card-title
+{
+    font-style: italic;
+    font-weight: bolder;
+}
+
+
+

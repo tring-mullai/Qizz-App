@@ -1,15 +1,49 @@
 import React, { useEffect } from 'react';
 import { Card, Button, Modal, ProgressBar, Form } from 'react-bootstrap';
 import { useDashboard } from '../../context/DashboardProvider';
-
+import './ListExams.css'
 
 const ListExams = () => {
-    const { fetchExams, fetchAttendedExams, exams, showExamModal, handleStartExam, setShowExamModal, examInProgress, currentQuestionIndex, setCurrentQuestionIndex, selectedAnswers, timeLeft, examSubmitted, hasAttendedExam, handleAnswerSelect, handlePrevQuestion, handleNextQuestion, showConfirmation, setShowConfirmationModal, formatTime, setShowConfirmation, handleConfirmSubmit } = useDashboard(); // Fetch function from context
+    const {
+        fetchExams,
+        fetchAttendedExams,
+        exams,
+        showExamModal,
+        handleStartExam,
+        setShowExamModal,
+        examInProgress,
+        currentQuestionIndex,
+        setCurrentQuestionIndex,
+        selectedAnswers,
+        timeLeft,
+        setTimeLeft,
+        examSubmitted,
+        hasAttendedExam,
+        handleAnswerSelect,
+        handlePrevQuestion, 
+        handleNextQuestion,
+        showConfirmation,
+        setShowConfirmation,
+        formatTime,
+        handleConfirmSubmit
+    } = useDashboard();
 
     useEffect(() => {
         fetchExams();
-        fetchAttendedExams()
+        fetchAttendedExams();
     }, []);
+
+    useEffect(() => {
+        let timer;
+        if (showExamModal && timeLeft > 0) {
+            timer = setInterval(() => {
+                setTimeLeft(prevTime => prevTime - 1);
+            }, 1000);
+        } else if (timeLeft === 0) {
+            handleConfirmSubmit();
+        }
+        return () => clearInterval(timer);
+    }, [showExamModal, timeLeft, handleConfirmSubmit, setTimeLeft]);
 
     return (
         <>
@@ -18,16 +52,16 @@ const ListExams = () => {
                 {exams.length > 0 ? (
                     exams.map((exam) => (
                         <Card key={exam.id} className="mb-3 custom-card">
-                            <Card.Body>
-                                <Card.Title>{exam.title}</Card.Title>
-                                <Card.Text>{exam.description}</Card.Text>
+                            <Card.Body className='custom-card-background'>
+                                <Card.Title className='card-title'>{exam.title}</Card.Title>
+                                <Card.Text className='card-text'>{exam.description}</Card.Text>
                                 <Card.Text>Duration: {exam.duration} minutes</Card.Text>
                                 <Card.Text>Questions: {exam.questions ? (typeof exam.questions === 'string' ? JSON.parse(exam.questions).length : exam.questions.length) : 0}</Card.Text>
 
                                 {hasAttendedExam(exam.id) ? (
-                                    <Button variant="secondary" disabled>Attended</Button>
+                                    <Button variant="secondary"  disabled>Attended</Button>
                                 ) : (
-                                    <Button variant="success" onClick={() => handleStartExam(exam)}>Start Exam</Button>
+                                    <Button  className='card-button-exam' onClick={() => handleStartExam(exam)}>Start Exam</Button>
                                 )}
                             </Card.Body>
                         </Card>
@@ -62,7 +96,7 @@ const ListExams = () => {
                                         className="mb-3"
                                         checked={selectedAnswers[currentQuestionIndex] === index}
                                         onChange={() => handleAnswerSelect(currentQuestionIndex, index)}
-                                    />
+                                    />                                    
                                 ))}
                             </Form>
 
@@ -104,7 +138,7 @@ const ListExams = () => {
                             )}
                         </Modal.Footer>
 
-                        <Modal centered show={showConfirmation} onHide={() => setShowConfirmationModal(false)}>
+                        <Modal centered show={showConfirmation} onHide={() => setShowConfirmation(false)}>
                             <Modal.Header closeButton>
                                 <Modal.Title>Confirm Submission</Modal.Title>
                             </Modal.Header>

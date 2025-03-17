@@ -29,7 +29,7 @@ const Scores = () => {
                                         <td>{parseFloat(score.score).toFixed(2)}%</td>
                                         <td>{new Date(score.created_at).toLocaleString()}</td>
                                         <td>
-                                            <Button variant="info" onClick={() => handleViewAnswers(score)}>
+                                            <Button className='model-title-answers' variant="info" onClick={() => handleViewAnswers(score)}>
                                                 View Answers
                                             </Button>
                                         </td>

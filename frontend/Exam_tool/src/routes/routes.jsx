@@ -1,8 +1,8 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Home from '../pages/Home/Home'
-import Login from '../pages/Auth/Login';
-import Signup from '../pages/Auth/Signup';
+import Login from '../pages/Auth/Login/Login';
+import Signup from '../pages/Auth/Signup/Signup';
 import ProtectedRoute from './ProtectedRoute';
 import MainDashboard from '../pages/MainDashboard/MainDashboard';
 import HomePage from '../pages/HomePage/HomePage';

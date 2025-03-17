@@ -16,42 +16,48 @@ const Sidebar = () => {
 
 
     return (
-        <CDBSidebar textColor="#fff" backgroundColor="#333">
+        <CDBSidebar textColor="#fff" className='sidebar' >
             <CDBSidebarHeader prefix={<i className="fa fa-bars fa-large"></i>}>
-                <a href="/" className="text-decoration-none" style={{ color: 'inherit' }}>
-                    QUIZZ-TIME
-                </a>
+                <h1 className="text-decoration-none logo-name" style={{ color: 'inherit' ,fontSize:'22px',fontStyle:'italic' }}>
+                    QUIZZ
+                </h1>
             </CDBSidebarHeader>
 
             <CDBSidebarContent className="sidebar-content">
-                <CDBSidebarMenu>
-                    <ul style={{ listStyleType: 'none', padding: 0, display: 'flex', flexDirection: 'column' }}>
-                        <NavLink to="/dashboard">
-                            <CDBSidebarMenuItem icon="columns" style={{ color: '#fff' }} className="sidebar-item">
+                <CDBSidebarMenu >
+                    <ul style={{ listStyleType: 'none', padding: 0, display: 'flex', flexDirection: 'column' } } >
+                        
+                        <NavLink to="/dashboard" >
+                            <CDBSidebarMenuItem icon="columns"  className='sidebar-label'>
                                 Home
                             </CDBSidebarMenuItem>
                         </NavLink>
+                       
+                        
                         <NavLink to="/dashboard/list-exams">
-                            <CDBSidebarMenuItem icon="table" style={{ color: '#fff' }} className="sidebar-item">
+                            <CDBSidebarMenuItem icon="table"  className='sidebar-label'>
                                 Attend Quizz
                             </CDBSidebarMenuItem>
                         </NavLink>
+                        
                         <NavLink to="/dashboard/create-exam">
-                            <CDBSidebarMenuItem icon="user" style={{ color: '#fff' }} className="sidebar-item">
+                            <CDBSidebarMenuItem icon="user"  className='sidebar-label' >
                                 Create Quizz
                             </CDBSidebarMenuItem>
                         </NavLink>
+                        
                         <NavLink to="/dashboard/scores">
-                            <CDBSidebarMenuItem icon="chart-line" style={{ color: '#fff' }} className="sidebar-item">
+                            <CDBSidebarMenuItem icon="chart-line" className='sidebar-label' >
                                 Scores
                             </CDBSidebarMenuItem>
                         </NavLink>
+                        
                     </ul>
                 </CDBSidebarMenu>
             </CDBSidebarContent>
 
-            <CDBSidebarFooter style={{ textAlign: 'center' }} onClick={handleLogout} className="sidebar-item">
-                <div style={{ padding: '20px 5px', cursor: 'pointer' }}>
+            <CDBSidebarFooter style={{ textAlign: 'center' }} onClick={handleLogout} className="sidebar-footer">
+                <div style={{ margin:"20px", cursor: 'pointer' }}>
                     Logout
                 </div>
             </CDBSidebarFooter>

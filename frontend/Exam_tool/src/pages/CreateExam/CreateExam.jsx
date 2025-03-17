@@ -31,60 +31,60 @@ const CreateExam = () => {
     const handleViewAttendees = async (examId) => {
         setLoadingAttendees(true);
         try {
-          const token = localStorage.getItem('token');
-          const response = await fetch(`https://n3q3bv9g-5000.inc1.devtunnels.ms/api/exams/exams/${examId}/attendees`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-      
-          console.log('Response:', response); // Log the response object
-      
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-      
-          const data = await response.json();
-          console.log('Response Data:', data); // Log the parsed JSON data
-      
-          if (data.success) {
-            setAttendees(data.data);
-            setShowAttendeesModal(true);
-          } else {
-            console.error('Failed to fetch attendees:', data.message);
-            alert('Failed to fetch attendees: ' + data.message);
-          }
-        } catch (error) {
-          console.error('Error fetching attendees:', error);
-          alert('Error fetching attendees: ' + error.message);
-        } finally {
-          setLoadingAttendees(false);
-        }
-      };
+            const token = localStorage.getItem('token');
+            const response = await fetch(`https://n3q3bv9g-5000.inc1.devtunnels.ms/api/exams/exams/${examId}/attendees`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
 
-      const viewDetailedAnswers = (attendee) => {
+            console.log('Response:', response);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Response Data:', data);
+
+            if (data.success) {
+                setAttendees(data.data);
+                setShowAttendeesModal(true);
+            } else {
+                console.error('Failed to fetch attendees:', data.message);
+                alert('Failed to fetch attendees: ' + data.message);
+            }
+        } catch (error) {
+            console.error('Error fetching attendees:', error);
+            alert('Error fetching attendees: ' + error.message);
+        } finally {
+            setLoadingAttendees(false);
+        }
+    };
+
+    const viewDetailedAnswers = (attendee) => {
         const detailedAnswers = attendee.exam_questions.map((question, index) => {
-          const userAnswer = attendee.user_answers[index];
-          return {
-            question_text: question.text,
-            selected_option: question.options[userAnswer],
-            correct_option: question.options[question.correct_answer],
-            is_correct: userAnswer === question.correct_answer
-          };
+            const userAnswer = attendee.user_answers[index];
+            return {
+                question_text: question.text,
+                selected_option: question.options[userAnswer],
+                correct_option: question.options[question.correct_answer],
+                is_correct: userAnswer === question.correct_answer
+            };
         });
-      
+
         setSelectedAttendee({
-          ...attendee,
-          answers: detailedAnswers
+            ...attendee,
+            answers: detailedAnswers
         });
         setShowAnswersModal(true);
-      };
+    };
 
     return (
         <>
             <h5>Manage Your Exams</h5>
-            <Button variant="primary" onClick={() => {
+            <Button className='create-exam' onClick={() => {
                 setCurrentExam({ id: null, title: '', description: '', duration: '', questions: [] });
                 setShowModal(true);
             }}>Create New Quizz</Button>
@@ -123,10 +123,10 @@ const CreateExam = () => {
                 )}
             </div>
 
-            {/* Modal to show attendees */}
+
             <Modal show={showAttendeesModal} onHide={() => setShowAttendeesModal(false)} size="lg">
                 <Modal.Header closeButton>
-                    <Modal.Title>Exam Attendees</Modal.Title>
+                    <Modal.Title className='model-title'>Exam Attendees</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {loadingAttendees ? (
@@ -152,8 +152,9 @@ const CreateExam = () => {
                                         <td>{attendee.user_email}</td>
                                         <td>{attendee.score}%</td>
                                         <td>
-                                            <Button 
-                                                variant="outline-info" 
+                                            <Button
+                                                variant="outline-info"
+                                                className='model-title-answers'
                                                 size="sm"
                                                 onClick={() => viewDetailedAnswers(attendee)}
                                             >
@@ -175,53 +176,53 @@ const CreateExam = () => {
                 </Modal.Footer>
             </Modal>
 
-            {/* Modal to show detailed answers */}
+            
             <Modal show={showAnswersModal} onHide={() => setShowAnswersModal(false)} size="lg">
-  <Modal.Header closeButton>
-    <Modal.Title>
-      Answers - {selectedAttendee?.user_name}
-    </Modal.Title>
-  </Modal.Header>
-  <Modal.Body>
-    {selectedAttendee && (
-      <div>
-        <p><strong>Score:</strong> {selectedAttendee.score}%</p>
-        <p><strong>Exam Title:</strong> {selectedAttendee.exam_title}</p>
-        <hr />
-        <h6>Answers:</h6>
-        {selectedAttendee.answers.map((answer, index) => (
-          <Card key={index} className="mb-3">
-            <Card.Body>
-              <Card.Title>Question {index + 1}</Card.Title>
-              <Card.Text>
-                <strong>Question:</strong> {answer.question_text}
-              </Card.Text>
-              <Card.Text>
-                <strong>Selected Answer:</strong> {answer.selected_option}
-              </Card.Text>
-              <Card.Text>
-                <strong>Correct Answer:</strong> {answer.correct_option}
-              </Card.Text>
-              <Card.Text>
-                <strong>Result:</strong> 
-                <span className={answer.is_correct ? "text-success" : "text-danger"}>
-                  {answer.is_correct ? "Correct" : "Incorrect"}
-                </span>
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        ))}
-      </div>
-    )}
-  </Modal.Body>
-  <Modal.Footer>
-    <Button variant="secondary" onClick={() => setShowAnswersModal(false)}>
-      Close
-    </Button>
-  </Modal.Footer>
-</Modal>
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        Answers - {selectedAttendee?.user_name}
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {selectedAttendee && (
+                        <div>
+                            <p><strong>Score:</strong> {selectedAttendee.score}%</p>
+                            <p><strong>Exam Title:</strong> {selectedAttendee.exam_title}</p>
+                            <hr />
+                            <h6>Answers:</h6>
+                            {selectedAttendee.answers.map((answer, index) => (
+                                <Card key={index} className="mb-3">
+                                    <Card.Body>
+                                        <Card.Title>Question {index + 1}</Card.Title>
+                                        <Card.Text>
+                                            <strong>Question:</strong> {answer.question_text}
+                                        </Card.Text>
+                                        <Card.Text>
+                                            <strong>Selected Answer:</strong> {answer.selected_option}
+                                        </Card.Text>
+                                        <Card.Text>
+                                            <strong>Correct Answer:</strong> {answer.correct_option}
+                                        </Card.Text>
+                                        <Card.Text>
+                                            <strong>Result:</strong>
+                                            <span className={answer.is_correct ? "text-success" : "text-danger"}>
+                                                {answer.is_correct ? "Correct" : "Incorrect"}
+                                            </span>
+                                        </Card.Text>
+                                    </Card.Body>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowAnswersModal(false)}>
+                        Close
+                    </Button>
+                </Modal.Footer>
+            </Modal>
 
-            {/* Delete confirmation modal */}
+
             <Modal show={showDelete} centered onHide={() => setShowDelete(false)}>
                 <ModalHeader closeButton>
                     <ModalTitle>Confirm Delete</ModalTitle>
@@ -235,16 +236,16 @@ const CreateExam = () => {
                 </Modal.Footer>
             </Modal>
 
-            {/* Create/Edit exam modal */}
+
             <Modal show={showModal} fullscreen onHide={() => setShowModal(false)}>
                 <Modal.Header closeButton>
-                    <Modal.Title>{currentExam.id ? 'Edit Exam' : 'Create Exam'}</Modal.Title>
+                    <Modal.Title className='model-title'>{currentExam.id ? 'Edit Exam' : 'Create Exam'}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={handleSubmit}>
                         <Form.Group className="mb-3">
-                            <Form.Label>Title</Form.Label>
-                            <Form.Control type="text" name="title" value={currentExam.title} onChange={handleInput} required />
+                            <Form.Label >Title</Form.Label>
+                            <Form.Control className="form-control" type="text" name="title" value={currentExam.title} onChange={handleInput} required />
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Description</Form.Label>
@@ -360,7 +361,7 @@ const CreateExam = () => {
                                 Add Question
                             </Button>
                         </Form.Group>
-                        <Button variant="primary" type="submit">Save</Button>
+                        <Button variant="primary" className='card-button-exam' type="submit">Save</Button>
                         <Button variant="secondary" className="ms-2" onClick={() => setShowModal(false)}>Cancel</Button>
                     </Form>
                 </Modal.Body>
