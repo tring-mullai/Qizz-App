@@ -15,7 +15,7 @@ const getScoresByUser = async (userId) => {
   const result = await pool.query(
     "SELECT s.*, e.title AS exam_title, e.questions FROM scores s JOIN exams e ON s.exam_id = e.id WHERE s.user_id = $1 ORDER BY s.created_at DESC",
     [userId]
-  );
+);
 
 
   const processedResults = result.rows.map(row => {

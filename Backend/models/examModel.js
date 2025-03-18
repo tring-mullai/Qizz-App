@@ -67,7 +67,7 @@ const getExamAttendees = async (examId) => {
        WHERE s.exam_id = $1`,
       [examId]
     );
-    console.log('Query Result:', result.rows); // Log the result
+    console.log('Query Result:', result.rows); 
     return result.rows;
   } catch (error) {
     console.error('Error in getExamAttendees:', error);

@@ -2,6 +2,7 @@ const pool = require('../DB/db');
 
 const getUserByEmail = async (email) => {
   const result = await pool.query('SELECT * FROM auth_user WHERE email = $1', [email]);
+  console.log(result)
   return result.rows[0];
 };
 
