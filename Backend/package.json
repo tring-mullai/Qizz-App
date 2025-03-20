@@ -4,7 +4,13 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js"
+    "start": "nodemon src/index.ts",
+    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d src/ormconfig.ts",
+    "typeorm-without-dataSource": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
+    "create:migration": "npm run typeorm-without-dataSource -- migration:create",
+    "db:migrate": "npm run typeorm -- migration:run",
+    "generate:migration": "npm run typeorm -- migration:generate",
+    "db:revert": "npm run typeorm -- migration:revert"
   },
   "keywords": [],
   "author": "",
@@ -17,9 +23,16 @@
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "nodemon": "^3.1.9",
-    "pg": "^8.14.0",
+    "pg": "^8.14.1",
+    "postgraphile": "^4.14.0",
+    "ts-node": "^10.9.2",
+    "typeorm": "^0.3.21",
     "winston": "^3.17.0"
   },
-  "devDependencies": {},
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.8.2"
+  }
 }
