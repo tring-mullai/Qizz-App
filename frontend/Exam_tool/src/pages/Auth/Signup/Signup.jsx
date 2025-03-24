@@ -8,6 +8,14 @@ import * as yup from 'yup';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { gql, useMutation } from '@apollo/client'
+
+
+const Register_Mutation = gql`
+mutation Register($email:String!,$password:String!,$name:String!)
+{
+regsiter(input:{email,password:$password,name:$name})
+}`;
 
 const schema = yup.object().shape({
   name: yup.string().required('Name is required').min(3, 'Name must be at least 3 characters'),
@@ -18,13 +26,14 @@ const schema = yup.object().shape({
 
 const Signup = () => {
   const navigate = useNavigate();
+  const [registerMutation] = useMutation(Register_Mutation);
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm({ resolver: yupResolver(schema) });
 
-  
+
   const [passwordType, setPasswordType] = useState('password');
   const [confirmPasswordType, setConfirmPasswordType] = useState('password');
   const [passwordIcon, setPasswordIcon] = useState(<FaEyeSlash />);
@@ -53,36 +62,31 @@ const Signup = () => {
   const onSubmit = async (data) => {
     try {
       delete data.confirmPassword;
-      const res = await fetch('https://n3q3bv9g-5000.inc1.devtunnels.ms/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
+      const { data: response } = await registerMutation({
+        variables: {
+          email: data.email,
+          password: data.password,
+          name: data.name
+        }
       });
 
-      let responseData;
-      try {
-        responseData = await res.json();
-      } catch (error) {
-        responseData = { message: 'Unexpected server response' };
-      }
 
-      if (res.ok) {
+      if (response.register) {
         toast.success('Signup successful!');
-        
         setTimeout(() => {
           navigate('/login')
         }, 1500);
-        
-      } else {
-        toast.error(responseData.message || 'Signup failed');
       }
     } catch (error) {
-      console.error('Signup Error:', error);
-      toast.error('Something went wrong');
+      console.log('Signup Error:', error);
+      toast.error(error.message || 'Something went wrong');
     }
+
   };
+
+
+
+
 
   return (
     <div className='d-flex flex-row'>
@@ -110,7 +114,7 @@ const Signup = () => {
                   type={passwordType}
                   {...register('password')}
                   placeholder='Enter password'
-                  
+
                   onChange={(e) => setPassword(e.target.value)}
                 />
                 <InputGroup.Text onClick={handlePasswordToggle} style={{ cursor: 'pointer' }}>
@@ -123,7 +127,7 @@ const Signup = () => {
             <Form.Group className='mb-3'>
               <Form.Label>Confirm Password <sup className='text-danger'>*</sup></Form.Label>
               <InputGroup>
-                <Form.Control type={confirmPasswordType} {...register('confirmPassword')} placeholder='Confirm password'  onChange={(e) => setConfirmPassword(e.target.value)} />
+                <Form.Control type={confirmPasswordType} {...register('confirmPassword')} placeholder='Confirm password' onChange={(e) => setConfirmPassword(e.target.value)} />
                 <InputGroup.Text onClick={handleConfirmPasswordToggle} style={{ cursor: 'pointer' }}>
                   {confirmPasswordIcon}
                 </InputGroup.Text>
@@ -131,7 +135,7 @@ const Signup = () => {
               {errors.confirmPassword && <small className='text-danger'>{errors.confirmPassword.message}</small>}
             </Form.Group>
 
-            <Button type='submit'  variant='primary' className='w-100 btn-lg submit-button '>Submit</Button>
+            <Button type='submit' variant='primary' className='w-100 btn-lg submit-button '>Submit</Button>
           </Form>
 
           <p className='mt-3 mb-3 text-center'>Already have an account?</p>
