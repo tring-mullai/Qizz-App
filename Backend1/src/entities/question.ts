@@ -1,27 +1,21 @@
-// entities/Question.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from "typeorm";
-import { Exam } from "./Exam";
-import { User } from "./User";
-import { UserAnswer } from "./UserAnswer";
+// src/entity/Question.ts
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Exam } from './Exam';
 
-@Entity()
+@Entity() // Explicitly set table name to avoid conflicts
 export class Question {
-  @PrimaryGeneratedColumn("uuid")
-  id!: string;
+  @PrimaryGeneratedColumn()
+  id!: number;
 
   @Column()
   text!: string;
 
-  @Column()
-  correctAnswer!: string;
+  @Column('simple-array')
+  options!: string[];
 
-  // Relationships
-  @ManyToOne(() => Exam, (exam) => exam.questions)
+  @Column({ name: 'correct_answer' }) // Explicitly map column name
+  correctAnswer!: number;
+
+  @ManyToOne(() => Exam, exam => exam.questions)
   exam!: Exam;
-
-  @ManyToOne(() => User, (user) => user.createdQuestions)
-  createdBy!: User;
-
-  @OneToMany(() => UserAnswer, (answer) => answer.question)
-  answers!: UserAnswer[];
 }

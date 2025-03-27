@@ -1,373 +1,430 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Card, Form, Modal, ModalHeader, ModalTitle, Dropdown, Table, Spinner } from 'react-bootstrap';
-import { useDashboard } from '../../context/DashboardProvider';
-import './CreateExam.css';
+import React, { useState, useEffect } from 'react';
+import { Button, Card, Modal, Form, Dropdown, Spinner, Alert } from 'react-bootstrap';
+import { useMutation, useQuery, gql } from '@apollo/client';
+import { useAuth } from '../../context/DashboardProvider';
+import { useNavigate } from 'react-router-dom';
+
+const GET_MY_EXAMS = gql`
+  query MyExams($creatorId: Int!) {
+    allExams(condition: { creatorId: $creatorId }) {
+      nodes {
+        id
+        title
+        description
+        duration
+        questionsByExamId {
+          nodes {
+            id
+            text
+            options
+            correctAnswer
+          }
+        }
+      }
+    }
+  }
+`;
+
+const CREATE_EXAM = gql`
+  mutation CreateExam($input: CreateExamInput!) {
+    createExam(input: $input) {
+      exam {
+        id
+        title
+        description
+        duration
+        creatorId
+      }
+    }
+  }
+`;
+
+const ADD_QUESTIONS = gql`
+  mutation AddQuestions($input: CustomAddQuestionsInput!) {
+    customAddQuestionsToExam(input: $input) {
+      questions {
+        id
+        text
+        options
+        correctAnswer
+      }
+    }
+  }
+`;
+
+const DELETE_EXAM = gql`
+  mutation DeleteExam($id: Int!) {
+    deleteExamById(input: { id: $id }) {
+      exam {
+        id
+      }
+    }
+  }
+`;
 
 const CreateExam = () => {
-    const { myExams, showModal, setShowModal, currentExam, setCurrentExam, handleEdit, handleDelete, handleSubmit, handleInput, fetchMyExams } = useDashboard();
-    const [showDelete, setShowDelete] = useState(false);
-    const [examDelete, setExamDelete] = useState(null);
-    const [showAttendeesModal, setShowAttendeesModal] = useState(false);
-    const [attendees, setAttendees] = useState([]);
-    const [loadingAttendees, setLoadingAttendees] = useState(false);
-    const [selectedAttendee, setSelectedAttendee] = useState(null);
-    const [showAnswersModal, setShowAnswersModal] = useState(false);
+  const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  const [currentExam, setCurrentExam] = useState({
+    id: null,
+    title: '',
+    description: '',
+    duration: 30,
+    questions: []
+  });
+  const [showModal, setShowModal] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+  const [examToDelete, setExamToDelete] = useState(null);
+  const [error, setError] = useState(null);
 
-    useEffect(() => {
-        fetchMyExams();
-    }, []);
+  const { 
+    loading: loadingExams, 
+    data: examsData, 
+    refetch: refetchExams
+  } = useQuery(GET_MY_EXAMS, {
+    variables: { creatorId: currentUser?.id },
+    skip: !currentUser?.id
+  });
 
-    const confirmDelete = (examId) => {
-        setExamDelete(examId);
-        setShowDelete(true);
-    };
+  const [createExam] = useMutation(CREATE_EXAM);
+  const [addQuestions] = useMutation(ADD_QUESTIONS);
+  const [deleteExam] = useMutation(DELETE_EXAM);
 
-    const executeDelete = () => {
-        handleDelete(examDelete);
-        setShowDelete(false);
-        setExamDelete(null);
-    };
+  useEffect(() => {
+    if (!currentUser) navigate('/login');
+  }, [currentUser, navigate]);
 
-    const handleViewAttendees = async (examId) => {
-        setLoadingAttendees(true);
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`https://n3q3bv9g-5000.inc1.devtunnels.ms/api/exams/exams/${examId}/attendees`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+  const myExams = examsData?.allExams?.nodes || [];
 
-            console.log('Response:', response);
+  const handleInput = (e) => {
+    const { name, value } = e.target;
+    setCurrentExam(prev => ({
+      ...prev,
+      [name]: name === 'duration' ? parseInt(value) : value
+    }));
+  };
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+    
+    try {
+      // Create exam
+      const { data: examData } = await createExam({
+        variables: {
+          input: {
+            exam: {
+              title: currentExam.title,
+              description: currentExam.description,
+              duration: currentExam.duration,
+              creatorId: currentUser.id
             }
-
-            const data = await response.json();
-            console.log('Response Data:', data);
-
-            if (data.success) {
-                setAttendees(data.data);
-                setShowAttendeesModal(true);
-            } else {
-                console.error('Failed to fetch attendees:', data.message);
-                alert('Failed to fetch attendees: ' + data.message);
-            }
-        } catch (error) {
-            console.error('Error fetching attendees:', error);
-            alert('Error fetching attendees: ' + error.message);
-        } finally {
-            setLoadingAttendees(false);
+          }
         }
-    };
+      });
 
-    const viewDetailedAnswers = (attendee) => {
-        const detailedAnswers = attendee.exam_questions.map((question, index) => {
-            const userAnswer = attendee.user_answers[index];
-            return {
-                question_text: question.text,
-                selected_option: question.options[userAnswer],
-                correct_option: question.options[question.correct_answer],
-                is_correct: userAnswer === question.correct_answer
-            };
-        });
+      // Add questions
+      await addQuestions({
+        variables: {
+          input: {
+            examId: examData.createExam.exam.id,
+            questions: currentExam.questions.map(q => ({
+              questionText: q.text,
+              questionOptions: q.options,
+              correctOptionIndex: q.correctAnswer
+            }))
+          }
+        }
+      });
 
-        setSelectedAttendee({
-            ...attendee,
-            answers: detailedAnswers
-        });
-        setShowAnswersModal(true);
-    };
+      await refetchExams();
+      setShowModal(false);
+    } catch (err) {
+      setError(err.message);
+      console.error("Exam creation failed:", err);
+    }
+  };
 
-    return (
-        <>
-            <h5>Manage Your Exams</h5>
-            <Button className='create-exam' onClick={() => {
-                setCurrentExam({ id: null, title: '', description: '', duration: '', questions: [] });
-                setShowModal(true);
-            }}>Create New Quizz</Button>
+  const handleEdit = (exam) => {
+    setCurrentExam({
+      id: exam.id,
+      title: exam.title,
+      description: exam.description,
+      duration: exam.duration,
+      questions: exam.questionsByExamId.nodes.map(q => ({
+        text: q.text,
+        options: q.options,
+        correctAnswer: q.correctAnswer
+      }))
+    });
+    setShowModal(true);
+  };
 
-            <div className="mt-4">
-                <h6>Your Created Exams:</h6>
-                {myExams.length > 0 ? (
-                    myExams.map((exam) => (
-                        <Card key={exam.id} className="mb-3 custom-card">
-                            <Card.Body>
-                                <div className='examcreation_card'>
-                                    <div>
-                                        <Card.Title>{exam.title}</Card.Title>
-                                        <Card.Text>{exam.description}</Card.Text>
-                                        <Card.Text>Duration: {exam.duration} minutes</Card.Text>
-                                        <Card.Text>Questions: {exam.questions ? (typeof exam.questions === 'string' ? JSON.parse(exam.questions).length : exam.questions.length) : 0}</Card.Text>
-                                    </div>
-                                    <Dropdown>
-                                        <Dropdown.Toggle variant="link" id={`dropdown-button-${exam.id}`} className="buttonthreedotcursor">
-                                            &#8942; {/* Unicode for three dots */}
-                                        </Dropdown.Toggle>
-                                        <Dropdown.Menu className="dropdown-menu-custom">
-                                            <Dropdown.Item onClick={() => handleViewAttendees(exam.id)}>
-                                                View Attendees
-                                            </Dropdown.Item>
-                                        </Dropdown.Menu>
-                                    </Dropdown>
-                                </div>
-                                <Button variant="warning" className="me-2" onClick={() => handleEdit(exam)}>Edit</Button>
-                                <Button variant="danger" onClick={() => confirmDelete(exam.id)}>Delete</Button>
-                            </Card.Body>
-                        </Card>
-                    ))
-                ) : (
-                    <p>Create an exam to get started.</p>
-                )}
+  const handleDelete = async () => {
+    try {
+      await deleteExam({ variables: { id: examToDelete } });
+      await refetchExams();
+      setShowDelete(false);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  return (
+    <div className="container py-4">
+      {error && <Alert variant="danger">{error}</Alert>}
+
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2>Manage Exams</h2>
+        <Button 
+          variant="primary" 
+          onClick={() => {
+            setCurrentExam({ 
+              id: null, 
+              title: '', 
+              description: '', 
+              duration: 30, 
+              questions: [] 
+            });
+            setShowModal(true);
+          }}
+        >
+          Create New Exam
+        </Button>
+      </div>
+
+      {loadingExams ? (
+        <Spinner animation="border" />
+      ) : myExams.length > 0 ? (
+        <div className="row">
+          {myExams.map((exam) => (
+            <div key={exam.id} className="col-md-6 col-lg-4 mb-4">
+              <Card className="h-100">
+                <Card.Body>
+                  <Card.Title>{exam.title}</Card.Title>
+                  <Card.Text>{exam.description}</Card.Text>
+                  <Card.Text>
+                    <small className="text-muted">
+                      {exam.duration} mins • {exam.questionsByExamId.nodes.length} questions
+                    </small>
+                  </Card.Text>
+                  
+                  <Dropdown>
+                    <Dropdown.Toggle variant="light" size="sm">
+                      Actions
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu>
+                      <Dropdown.Item onClick={() => handleEdit(exam)}>
+                        Edit
+                      </Dropdown.Item>
+                      <Dropdown.Item 
+                        onClick={() => {
+                          setExamToDelete(exam.id);
+                          setShowDelete(true);
+                        }}
+                        className="text-danger"
+                      >
+                        Delete
+                      </Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
+                </Card.Body>
+              </Card>
             </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-5">
+          <p className="lead">No exams created yet</p>
+        </div>
+      )}
 
+      {/* Create/Edit Exam Modal */}
+      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>{currentExam.id ? 'Edit Exam' : 'Create Exam'}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleSubmit}>
+            <Form.Group className="mb-3">
+              <Form.Label>Title</Form.Label>
+              <Form.Control
+                name="title"
+                value={currentExam.title}
+                onChange={handleInput}
+                required
+              />
+            </Form.Group>
 
-            <Modal show={showAttendeesModal} onHide={() => setShowAttendeesModal(false)} size="lg">
-                <Modal.Header closeButton>
-                    <Modal.Title className='model-title'>Exam Attendees</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {loadingAttendees ? (
-                        <div className="text-center">
-                            <Spinner animation="border" role="status">
-                                <span className="visually-hidden">Loading...</span>
-                            </Spinner>
-                        </div>
-                    ) : attendees.length > 0 ? (
-                        <Table striped bordered hover responsive>
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Score</th>
-                                    <th>Answers</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {attendees.map((attendee) => (
-                                    <tr key={attendee.user_id}>
-                                        <td>{attendee.user_name}</td>
-                                        <td>{attendee.user_email}</td>
-                                        <td>{attendee.score}%</td>
-                                        <td>
-                                            <Button
-                                                variant="outline-info"
-                                                className='model-title-answers'
-                                                size="sm"
-                                                onClick={() => viewDetailedAnswers(attendee)}
-                                            >
-                                                View Answers
-                                            </Button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </Table>
-                    ) : (
-                        <p>No attendees found for this exam.</p>
-                    )}
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowAttendeesModal(false)}>
-                        Close
+            <Form.Group className="mb-3">
+              <Form.Label>Description</Form.Label>
+              <Form.Control
+                as="textarea"
+                name="description"
+                value={currentExam.description}
+                onChange={handleInput}
+                rows={3}
+                required
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Duration (minutes)</Form.Label>
+              <Form.Control
+                type="number"
+                name="duration"
+                value={currentExam.duration}
+                onChange={handleInput}
+                min="1"
+                required
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Questions</Form.Label>
+              {currentExam.questions.map((question, qIndex) => (
+                <Card key={qIndex} className="mb-3">
+                  <Card.Body>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Question {qIndex + 1}</Form.Label>
+                      <Form.Control
+                        as="textarea"
+                        value={question.text}
+                        onChange={(e) => {
+                          const updatedQuestions = [...currentExam.questions];
+                          updatedQuestions[qIndex].text = e.target.value;
+                          setCurrentExam({ ...currentExam, questions: updatedQuestions });
+                        }}
+                        rows={2}
+                        required
+                      />
+                    </Form.Group>
+
+                    {question.options.map((option, oIndex) => (
+                      <div key={oIndex} className="d-flex align-items-center mb-2">
+                        <Form.Control
+                          value={option}
+                          onChange={(e) => {
+                            const updatedQuestions = [...currentExam.questions];
+                            updatedQuestions[qIndex].options[oIndex] = e.target.value;
+                            setCurrentExam({ ...currentExam, questions: updatedQuestions });
+                          }}
+                          required
+                        />
+                        <Form.Check
+                          type="radio"
+                          className="ms-2"
+                          checked={question.correctAnswer === oIndex}
+                          onChange={() => {
+                            const updatedQuestions = [...currentExam.questions];
+                            updatedQuestions[qIndex].correctAnswer = oIndex;
+                            setCurrentExam({ ...currentExam, questions: updatedQuestions });
+                          }}
+                          label="Correct"
+                        />
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          className="ms-2"
+                          onClick={() => {
+                            const updatedQuestions = [...currentExam.questions];
+                            updatedQuestions[qIndex].options.splice(oIndex, 1);
+                            if (question.correctAnswer === oIndex) {
+                              updatedQuestions[qIndex].correctAnswer = null;
+                            }
+                            setCurrentExam({ ...currentExam, questions: updatedQuestions });
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+
+                    <Button
+                      variant="outline-secondary"
+                      size="sm"
+                      onClick={() => {
+                        const updatedQuestions = [...currentExam.questions];
+                        updatedQuestions[qIndex].options.push('');
+                        setCurrentExam({ ...currentExam, questions: updatedQuestions });
+                      }}
+                      disabled={question.options.length >= 5}
+                    >
+                      Add Option
                     </Button>
-                </Modal.Footer>
-            </Modal>
 
-            
-            <Modal show={showAnswersModal} onHide={() => setShowAnswersModal(false)} size="lg">
-                <Modal.Header closeButton>
-                    <Modal.Title>
-                        Answers - {selectedAttendee?.user_name}
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {selectedAttendee && (
-                        <div>
-                            <p><strong>Score:</strong> {selectedAttendee.score}%</p>
-                            <p><strong>Exam Title:</strong> {selectedAttendee.exam_title}</p>
-                            <hr />
-                            <h6>Answers:</h6>
-                            {selectedAttendee.answers.map((answer, index) => (
-                                <Card key={index} className="mb-3">
-                                    <Card.Body>
-                                        <Card.Title>Question {index + 1}</Card.Title>
-                                        <Card.Text>
-                                            <strong>Question:</strong> {answer.question_text}
-                                        </Card.Text>
-                                        <Card.Text>
-                                            <strong>Selected Answer:</strong> {answer.selected_option}
-                                        </Card.Text>
-                                        <Card.Text>
-                                            <strong>Correct Answer:</strong> {answer.correct_option}
-                                        </Card.Text>
-                                        <Card.Text>
-                                            <strong>Result:</strong>
-                                            <span className={answer.is_correct ? "text-success" : "text-danger"}>
-                                                {answer.is_correct ? "Correct" : "Incorrect"}
-                                            </span>
-                                        </Card.Text>
-                                    </Card.Body>
-                                </Card>
-                            ))}
-                        </div>
-                    )}
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowAnswersModal(false)}>
-                        Close
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      className="mt-2"
+                      onClick={() => {
+                        const updatedQuestions = [...currentExam.questions];
+                        updatedQuestions.splice(qIndex, 1);
+                        setCurrentExam({ ...currentExam, questions: updatedQuestions });
+                      }}
+                    >
+                      Remove Question
                     </Button>
-                </Modal.Footer>
-            </Modal>
+                  </Card.Body>
+                </Card>
+              ))}
 
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setCurrentExam(prev => ({
+                    ...prev,
+                    questions: [
+                      ...prev.questions,
+                      { text: '', options: ['', ''], correctAnswer: null }
+                    ]
+                  }));
+                }}
+                disabled={currentExam.questions.length >= 20}
+              >
+                Add Question
+              </Button>
+            </Form.Group>
 
-            <Modal show={showDelete} centered onHide={() => setShowDelete(false)}>
-                <ModalHeader closeButton>
-                    <ModalTitle>Confirm Delete</ModalTitle>
-                </ModalHeader>
-                <Modal.Body>
-                    Are you sure you want to delete this exam?
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant='secondary' onClick={() => setShowDelete(false)}>Cancel</Button>
-                    <Button variant='danger' onClick={executeDelete}>Delete</Button>
-                </Modal.Footer>
-            </Modal>
+            <div className="d-flex justify-content-end">
+              <Button 
+                variant="secondary" 
+                onClick={() => setShowModal(false)}
+                className="me-2"
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="primary" 
+                type="submit"
+                disabled={currentExam.questions.length === 0}
+              >
+                {currentExam.id ? 'Update Exam' : 'Create Exam'}
+              </Button>
+            </div>
+          </Form>
+        </Modal.Body>
+      </Modal>
 
-
-            <Modal show={showModal} fullscreen onHide={() => setShowModal(false)}>
-                <Modal.Header closeButton>
-                    <Modal.Title className='model-title'>{currentExam.id ? 'Edit Exam' : 'Create Exam'}</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Form onSubmit={handleSubmit}>
-                        <Form.Group className="mb-3">
-                            <Form.Label >Title</Form.Label>
-                            <Form.Control className="form-control" type="text" name="title" value={currentExam.title} onChange={handleInput} required />
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Description</Form.Label>
-                            <Form.Control as="textarea" name="description" value={currentExam.description} onChange={handleInput} required />
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Duration (minutes)</Form.Label>
-                            <Form.Control type="number" name="duration" value={currentExam.duration} onChange={handleInput} required />
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Questions</Form.Label>
-                            <div className="mb-2">
-                                {currentExam.questions.map((question, qIndex) => (
-                                    <Card className="mb-3" key={qIndex}>
-                                        <Card.Body>
-                                            <Form.Group className="mb-2">
-                                                <Form.Label>Question Text</Form.Label>
-                                                <Form.Control
-                                                    type="text"
-                                                    value={question.text || ''}
-                                                    onChange={(e) => {
-                                                        const updatedQuestions = [...currentExam.questions];
-                                                        updatedQuestions[qIndex].text = e.target.value;
-                                                        setCurrentExam({ ...currentExam, questions: updatedQuestions });
-                                                    }}
-                                                    required
-                                                />
-                                            </Form.Group>
-                                            <Form.Group className="mb-2">
-                                                <Form.Label>Options</Form.Label>
-                                                {(question.options || []).map((option, oIndex) => (
-                                                    <div className="d-flex mb-2" key={oIndex}>
-                                                        <Form.Control
-                                                            type="text"
-                                                            value={option}
-                                                            onChange={(e) => {
-                                                                const updatedQuestions = [...currentExam.questions];
-                                                                updatedQuestions[qIndex].options[oIndex] = e.target.value;
-                                                                setCurrentExam({ ...currentExam, questions: updatedQuestions });
-                                                            }}
-                                                        />
-                                                        <Form.Check
-                                                            type="radio"
-                                                            className="ms-2 mt-2"
-                                                            checked={question.correct_answer === oIndex}
-                                                            onChange={() => {
-                                                                const updatedQuestions = [...currentExam.questions];
-                                                                updatedQuestions[qIndex].correct_answer = oIndex;
-                                                                setCurrentExam({ ...currentExam, questions: updatedQuestions });
-                                                            }}
-                                                            label="Correct"
-                                                        />
-                                                        <Button
-                                                            variant="danger"
-                                                            size="sm"
-                                                            className="ms-2"
-                                                            onClick={() => {
-                                                                const updatedQuestions = [...currentExam.questions];
-                                                                updatedQuestions[qIndex].options.splice(oIndex, 1);
-                                                                if (question.correct_answer === oIndex) {
-                                                                    updatedQuestions[qIndex].correct_answer = null;
-                                                                }
-                                                                setCurrentExam({ ...currentExam, questions: updatedQuestions });
-                                                            }}
-                                                        >
-                                                            Remove
-                                                        </Button>
-                                                    </div>
-                                                ))}
-                                                <Button
-                                                    variant="secondary"
-                                                    size="sm"
-                                                    onClick={() => {
-                                                        const updatedQuestions = [...currentExam.questions];
-                                                        if (!updatedQuestions[qIndex].options) {
-                                                            updatedQuestions[qIndex].options = [];
-                                                        }
-                                                        updatedQuestions[qIndex].options.push('');
-                                                        setCurrentExam({ ...currentExam, questions: updatedQuestions });
-                                                    }}
-                                                >
-                                                    Add Option
-                                                </Button>
-                                            </Form.Group>
-                                            <Button
-                                                variant="danger"
-                                                size="sm"
-                                                onClick={() => {
-                                                    const updatedQuestions = [...currentExam.questions];
-                                                    updatedQuestions.splice(qIndex, 1);
-                                                    setCurrentExam({ ...currentExam, questions: updatedQuestions });
-                                                }}
-                                            >
-                                                Remove Question
-                                            </Button>
-                                        </Card.Body>
-                                    </Card>
-                                ))}
-                            </div>
-
-                            <Button
-                                variant="secondary"
-                                onClick={() => {
-                                    const updatedQuestions = [...currentExam.questions];
-                                    updatedQuestions.push({
-                                        text: '',
-                                        options: ['', ''],
-                                        correct_answer: null
-                                    });
-                                    setCurrentExam({ ...currentExam, questions: updatedQuestions });
-                                }}
-                            >
-                                Add Question
-                            </Button>
-                        </Form.Group>
-                        <Button variant="primary" className='card-button-exam' type="submit">Save</Button>
-                        <Button variant="secondary" className="ms-2" onClick={() => setShowModal(false)}>Cancel</Button>
-                    </Form>
-                </Modal.Body>
-            </Modal>
-        </>
-    );
+      {/* Delete Confirmation Modal */}
+      <Modal show={showDelete} onHide={() => setShowDelete(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Delete</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to delete this exam? This action cannot be undone.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDelete(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={handleDelete}>
+            Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </div>
+  );
 };
 
 export default CreateExam;

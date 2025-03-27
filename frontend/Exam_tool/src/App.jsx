@@ -1,17 +1,18 @@
-import React from 'react';
 import { ApolloProvider } from '@apollo/client';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import { BrowserRouter } from 'react-router-dom'; // Use BrowserRouter directly
+import { BrowserRouter } from 'react-router-dom';
+import { AuthProvider } from './context/DashboardProvider';
+import { client } from './apollo/Client'; // Changed to named import
 import AppRoutes from './routes/routes';
-import client from './apollo/Client';
 
 const App = () => {
   return (
-  <ApolloProvider client={client}>
-    <BrowserRouter>
-      <AppRoutes />
-    </BrowserRouter>
-  </ApolloProvider>  
+    <ApolloProvider client={client}>
+      <AuthProvider>
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </AuthProvider>
+    </ApolloProvider>
   );
 };
 

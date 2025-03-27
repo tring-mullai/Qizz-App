@@ -1,29 +1,25 @@
-// entities/Exam.ts
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, OneToMany } from "typeorm";
-import { User } from "./User";
-import { Question } from "./question";
-import { UserAnswer } from "./UserAnswer";
+// src/entity/Exam.ts
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
+import { User } from './User';
+import { Question } from './Question';
+
 @Entity()
 export class Exam {
-  @PrimaryGeneratedColumn("uuid")
-  id!: string;
+  @PrimaryGeneratedColumn()
+  id!: number;
 
   @Column()
   title!: string;
 
-  @Column()
+  @Column({ type: 'text' })
   description!: string;
 
-  @CreateDateColumn()
-  createdAt!: Date;
+  @Column()
+  duration!: number; // in minutes
 
-  // Relationships
-  @ManyToOne(() => User, (user) => user.createdExams)
-  createdBy!: User;
+  @ManyToOne(() => User, user => user.exams)
+  creator!: User;
 
-  @OneToMany(() => Question, (question) => question.exam)
+  @OneToMany(() => Question, question => question.exam, { cascade: true })
   questions!: Question[];
-
-  @OneToMany(() => UserAnswer, (answer) => answer.exam)
-  answers!: UserAnswer[];
 }

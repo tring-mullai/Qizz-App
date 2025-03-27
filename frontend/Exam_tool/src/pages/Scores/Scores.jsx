@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useDashboard } from '../../context/DashboardProvider';
+// import { useDashboard } from '../../context/DashboardProvider';
 import { Button, Modal, ListGroup } from 'react-bootstrap';
 const Scores = () => {
     const { scores, fetchScores, showViewAnswers, selectedScore, handleCloseAnswers, handleViewAnswers } = useDashboard();

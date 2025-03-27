@@ -1,31 +1,41 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 import { Container, Form, Button, Card, InputGroup } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import login_img from '../../../assets/login_background.png'
-import { useForm } from "react-hook-form"
-import { yupResolver } from '@hookform/resolvers/yup'
-import * as yup from "yup"
-import { ToastContainer, toast } from 'react-toastify'
+import login_img from '../../../assets/login_background.png';
+import { useForm } from "react-hook-form";
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from "yup";
+import { ToastContainer, toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import './Login.css'
+import { gql, useMutation } from '@apollo/client';
+import { useAuth } from '../../../context/DashboardProvider'
+import './Login.css';
 
-
-const schema = yup.object().shape(
-  {
-    email: yup.string().required("Email is required"),
-    // .email("Invalid email Format").required("Email is required"),
-    password: yup.string()
-    // .required('password is required')
-    // .min(6,"length must be of 6").matches(/[0-9]/,"password must contain atleast one number").required('password is required')
+const LOGIN_MUTATION = gql`
+  mutation Login($email: String!, $password: String!) {
+    login(email: $email, password: $password) {
+      token
+      user {
+        id
+        name
+        email
+      }
+    }
   }
-);
+`;
 
+const schema = yup.object().shape({
+  email: yup.string().required("Email is required"),
+  password: yup.string().required("Password is required")
+});
 
 const Login = () => {
   const navigate = useNavigate();
   const [type, setType] = useState('password');
   const [icon, setIcon] = useState(<FaEyeSlash />);
+  const {login} = useAuth();
+  const [loginMutation] = useMutation(LOGIN_MUTATION);
 
   const handleToggle = () => {
     if (type === 'password') {
@@ -45,35 +55,35 @@ const Login = () => {
 
   const onSubmit = async (data) => {
     try {
-      const res = await fetch("https://n3q3bv9g-5000.inc1.devtunnels.ms/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
+      const { data: loginData } = await loginMutation({
+        variables: {
+          email: data.email,
+          password: data.password
+        }
       });
-
-      const responseData = await res.json();
-
-      if (res.ok) {
-        localStorage.setItem("token", responseData.token);
+  
+      console.log('Login Response:', loginData); // Add this
+      
+      if (loginData.login.token) {
+        login(loginData.login.token, loginData.login.user);
+        
+        // Verify storage immediately
+        console.log('Stored Token:', localStorage.getItem('token'));
+        console.log('Stored User:', localStorage.getItem('user'));
+        
         toast.success("Login successful!");
-        setTimeout(() => {
-          navigate('/dashboard')
-        }, 1000);
-      } else {
-        toast.error(responseData.message);
+        navigate('/dashboard', { replace: true }); // Remove setTimeout
       }
     } catch (error) {
       console.error("Login Error:", error);
-      toast.error("Something went wrong. Please try again.");
+      toast.error(error.message || "Login failed. Please try again.");
     }
   };
 
   return (
-    <div className='d-flex flex-row '>
+    <div className='d-flex flex-row'>
       <div>
-        <img src={login_img} alt='not displayed' style={{ height: '100vh', width: '90%' }} />
+        <img src={login_img} alt='Login background' style={{ height: '100vh', width: '90%' }} />
       </div>
       <div>
         <Container className='d-flex justify-content-center align-items-center vh-100'>
@@ -99,10 +109,10 @@ const Login = () => {
                 </InputGroup>
                 {errors.password && <small className='text-danger'>{errors.password.message}</small>}
               </Form.Group>
-              <Button type='submit'  className='w-100 btn-lg submit-button'>Submit</Button>
+              <Button type='submit' className='w-100 btn-lg submit-button'>Submit</Button>
             </Form>
             <p className='text-center mt-3'>Don't have an account?</p>
-            <Link to="/signup" style={{ display: "inline", marginLeft: "120px", width: "100px" }} >
+            <Link to="/signup" style={{ display: "inline", marginLeft: "120px", width: "100px" }}>
               <Button type='button' variant='secondary' style={{ width: "100px" }}>Sign Up</Button>
             </Link>
           </Card>

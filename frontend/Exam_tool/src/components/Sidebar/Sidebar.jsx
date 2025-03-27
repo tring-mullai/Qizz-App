@@ -8,11 +8,11 @@ import {
     CDBSidebarMenuItem,
 } from 'cdbreact';
 import { NavLink } from 'react-router-dom';
-import { useDashboard } from '../../context/DashboardProvider';
+import { useAuth } from '../../context/DashboardProvider';
 import './Sidebar.css';
 
 const Sidebar = () => {
-    const { handleLogout } = useDashboard();
+    const { logout} = useAuth();
 
 
     return (
@@ -56,7 +56,7 @@ const Sidebar = () => {
                 </CDBSidebarMenu>
             </CDBSidebarContent>
 
-            <CDBSidebarFooter style={{ textAlign: 'center' }} onClick={handleLogout} className="sidebar-footer">
+            <CDBSidebarFooter style={{ textAlign: 'center' }} onClick={logout} className="sidebar-footer">
                 <div style={{ margin:"20px", cursor: 'pointer' }}>
                     Logout
                 </div>

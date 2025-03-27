@@ -1,10 +1,9 @@
-// entities/User.ts
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
-import { Exam } from "./Exam";
-import { Question } from "./question";
-import { UserAnswer } from "./UserAnswer";
+// src/entity/User.ts
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Score } from './Score';
+import { Exam } from './Exam';
 
-@Entity("users")
+@Entity()
 export class User {
   @PrimaryGeneratedColumn()
   id!: number;
@@ -17,17 +16,11 @@ export class User {
 
   @Column()
   password!: string;
+  
 
-  @Column({ default: "student" }) // 'admin' or 'student'
-  role!: string;
+  @OneToMany(() => Score, score => score.user)
+  scores!: Score[];
 
-  // Relationships
-  @OneToMany(() => Exam, (exam) => exam.createdBy)
-  createdExams!: Exam[];
-
-  @OneToMany(() => Question, (question) => question.createdBy)
-  createdQuestions!: Question[];
-
-  @OneToMany(() => UserAnswer, (answer) => answer.user)
-  answers!: UserAnswer[];
+  @OneToMany(() => Exam, exam => exam.creator)
+  exams!: Exam[];
 }

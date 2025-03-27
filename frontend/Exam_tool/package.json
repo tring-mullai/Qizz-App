@@ -16,6 +16,8 @@
     "bootstrap": "^5.3.3",
     "cdbreact": "^1.5.19",
     "graphql": "^16.10.0",
+    "graphql-request": "^7.1.2",
+    "jwt-decode": "^4.0.0",
     "react": "^19.0.0",
     "react-bootstrap": "^2.10.9",
     "react-dom": "^19.0.0",
