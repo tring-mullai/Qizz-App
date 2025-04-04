@@ -2,7 +2,7 @@ import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 
 const httpLink = createHttpLink({
-  uri: 'http://localhost:5001/graphql',
+  uri: import.meta.env.VITE_GRAPHQL_API,
 });
 
 const authLink = setContext((_, { headers }) => {

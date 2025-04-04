@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button, Card, Modal, Form, Dropdown, Spinner, Alert } from 'react-bootstrap';
 import { useMutation, useQuery, gql } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-
+import { useAuth } from "../../context/DashboardProvider";
 const GET_MY_EXAMS = gql`
   query MyExams($creatorId: Int!) {
     allExams(condition: { creatorId: $creatorId }) {
@@ -68,13 +68,16 @@ const DELETE_EXAM = gql`
 
 const CreateExam = () => {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+
+  const userId = currentUser?.id;
 
 
   const [currentExam, setCurrentExam] = useState({
     id: null,
     title: '',
     description: '',
-    duration: 30,
+    duration: '30',
     questions: [{
       text: '',
       options: ['', ''],
@@ -97,7 +100,7 @@ const CreateExam = () => {
     data: examsData,
     refetch: refetchExams
   } = useQuery(GET_MY_EXAMS, {
-    variables: { creatorId: 1 }, // Replace with actual user ID
+    variables: { creatorId: userId }, 
     skip: false,
     fetchPolicy: 'network-only'
   });
@@ -183,7 +186,7 @@ const CreateExam = () => {
           examTitle: currentExam.title.trim(),
           examDescription: currentExam.description.trim(),
           examDuration: currentExam.duration,
-          creatorId: 1, // Replace with actual user ID
+          creatorId: userId, // Replace with actual user ID
           questions: questionsData
         };
 

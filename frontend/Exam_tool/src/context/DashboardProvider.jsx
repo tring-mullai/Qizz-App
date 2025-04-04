@@ -18,8 +18,6 @@ export const AuthProvider = ({ children }) => {
         
         if (token && userData) {
           const decoded = jwtDecode(token);
-          
-          // Basic token expiration check
           if (decoded.exp * 1000 < Date.now()) {
             throw new Error('Token expired');
           }
@@ -62,15 +60,15 @@ export const AuthProvider = ({ children }) => {
     
     try {
       const decoded = jwtDecode(token);
-      console.log('Token Expiry:', new Date(decoded.exp * 1000)); // Debug line
+      console.log('Token Expiry:', new Date(decoded.exp * 1000));
       
       const isValid = decoded.exp * 1000 > Date.now();
-      console.log('Token Valid:', isValid); // Debug line
+      console.log('Token Valid:', isValid); 
       
       if (!isValid) logout();
       return isValid;
     } catch (err) {
-      console.error('Token Decode Error:', err); // Debug line
+      console.error('Token Decode Error:', err); 
       logout();
       return false;
     }

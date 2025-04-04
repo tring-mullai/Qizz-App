@@ -3,7 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import { postgraphile } from 'postgraphile';
 import jwt from "jsonwebtoken";
-import { AddQuestionsPlugin } from './auth/plugin/AddQuestion';
+// import { AddQuestionsPlugin } from './auth/plugin/AddQuestion';
 import { examPlugin } from './auth/plugin/createExam';
 import { attendeesPlugin } from './auth/plugin/examAttendees';
 import { updateExamPlugin } from './auth/plugin/updateExamQuestions';
@@ -33,7 +33,7 @@ AppDataSource.initialize()
     console.error('Error during Data Source initialization:', err);
   });
 
-// Function to get user by ID using TypeORM
+
 const getUserById = async (userId: number) => {
   try {
     const user = await AppDataSource.manager.findOne('User', { 
@@ -52,7 +52,7 @@ app.use(
     graphiql: true,
     enhanceGraphiql: true,
     dynamicJson: true,
-    enableCors: true, // Allow frontend requests
+    enableCors: true, 
     retryOnInitFail: true,
     appendPlugins: [
       authPlugin,
@@ -81,18 +81,18 @@ app.use(
       try {
         const token = authHeader.split(' ')[1];
     
-        // Ensure JWT_SECRET is defined
+        
         const secret = process.env.JWT_SECRET;
         if (!secret) {
           throw new Error("JWT_SECRET is not defined in environment variables");
         }
     
-        // Verify token
+        
         const decodedToken = jwt.verify(token, secret) as { userId: number };
     
         console.log('User authenticated:', decodedToken);
     
-        // Fetch user details
+        
         const user = await getUserById(decodedToken.userId);
         if (!user) {
           console.log('User not found.');
