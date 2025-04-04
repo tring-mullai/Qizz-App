@@ -11,7 +11,6 @@ export const AddQuestionsPlugin = makeExtendSchemaPlugin((build) => {
         questionOptions: [String!]!
         correctOptionIndex: Int!
       }
-
       input CustomAddQuestionsInput {
         examId: Int!
         questions: [CustomAddQuestionInput!]!

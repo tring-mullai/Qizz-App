@@ -1,36 +1,10 @@
-// src/auth/plugin/examAttendees.ts
-import { makeExtendSchemaPlugin, gql } from 'graphile-utils';
-import { AppDataSource } from '../../db/ormconfig';
-import { Score } from '../../entities/Score';
+import { makeExtendSchemaPlugin } from 'graphile-utils';
+import { attendeesSchema } from '../schema/attendeesSchema';
+import { attendeesResolver } from '../resolver/attendeesResolver';
 
-export const ExamAttendeesPlugin = makeExtendSchemaPlugin((build) => {
+export const attendeesPlugin = makeExtendSchemaPlugin((build) => {
   return {
-    typeDefs: gql`
-      type ExamAttendee {
-        user: User!
-        score: Score!
-      }
-
-      extend type Query {
-        examAttendees(examId: Int!): [ExamAttendee!]!
-      }
-    `,
-    resolvers: {
-      Query: {
-        examAttendees: async (_query, args, _context, _resolveInfo) => {
-          const scoreRepo = AppDataSource.getRepository(Score);
-          
-          const scores = await scoreRepo.find({
-            where: { exam: { id: args.examId } },
-            relations: ['user']
-          });
-          
-          return scores.map(score => ({
-            user: score.user,
-            score
-          }));
-        }
-      }
-    }
+    typeDefs: attendeesSchema,
+    resolvers: attendeesResolver
   };
 });

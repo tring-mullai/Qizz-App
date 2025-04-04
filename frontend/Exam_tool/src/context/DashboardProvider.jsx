@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useApolloClient } from '@apollo/client';
-import { jwtDecode } from 'jwt-decode'; // Ensure you've installed jwt-decode
+import { jwtDecode } from 'jwt-decode'; 
 
 const AuthContext = createContext();
 
@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const client = useApolloClient();
 
-  // Initialize auth state from localStorage
+  
   useEffect(() => {
     const initializeAuth = async () => {
       try {

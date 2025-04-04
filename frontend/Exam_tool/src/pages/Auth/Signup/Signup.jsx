@@ -9,17 +9,18 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { gql, useMutation } from '@apollo/client';
-// Ensure this matches your backend exactly
+
 
 const REGISTER_MUTATION = gql`
-  mutation Register($email: String!, $password: String!, $name: String!) {
-    register(email: $email, password: $password, name: $name)
+  mutation guest($email: String!, $password: String!, $name: String!,$role:String!) {
+    register(email: $email, password: $password, name: $name,role:$role)
   }
 `;
 
 const schema = yup.object().shape({
   name: yup.string().required('Name is required').min(3, 'Name must be at least 3 characters'),
   email: yup.string().required('Email is required').email('Invalid email format'),
+  role:yup.string().required('Role is required'),
   password: yup.string()
     .required('Password is required')
     .min(8, 'Password must be at least 8 characters')
@@ -70,7 +71,8 @@ const Signup = () => {
         variables: {
           email: data.email,
           password: data.password,
-          name: data.name
+          name: data.name,
+          role:data.role
         }
       });
   
@@ -103,6 +105,15 @@ const Signup = () => {
               <Form.Label>Email <sup className='text-danger'>*</sup></Form.Label>
               <Form.Control type='email' {...register('email')} placeholder='Enter email' />
               {errors.email && <small className='text-danger'>{errors.email.message}</small>}
+            </Form.Group>
+
+            <Form.Group className='mb-3'>
+              <Form.Label>Role <sup className='text-danger'>*</sup></Form.Label>
+              <Form.Select {...register('role')}>
+                <option value=" ">Select Role</option>
+                <option value='admin'>Admin</option>
+                <option value='student'>Student</option>
+              </Form.Select>
             </Form.Group>
 
             <Form.Group className='mb-3'>

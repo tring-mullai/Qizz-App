@@ -4,7 +4,7 @@ import { AppDataSource } from '../../db/ormconfig';
 
 export const registerService = async(args: any) => {
     const userRepository = AppDataSource.getRepository(User);
-    const { email, name, password } = args;
+    const { email, name, password,role } = args;
           
     const existing = await userRepository.findOne({ where: { email } });
     if (existing) {
@@ -16,12 +16,11 @@ export const registerService = async(args: any) => {
     const newUser = userRepository.create({
       email,
       name,
-      password: hashedPassword
+      password: hashedPassword,
+      role
     });
           
     await userRepository.save(newUser);
           
-    return "Registration successful. Please log in."
-      
+    return "Registration successful. Please log in."      
   }
-

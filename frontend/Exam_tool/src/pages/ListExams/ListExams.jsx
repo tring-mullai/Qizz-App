@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/DashboardProvider';
 import './ListExams.css';
 
+// GraphQL queries and mutations
 const GET_ALL_EXAMS = gql`
   query GetAllExams {
     allExams {
@@ -39,15 +40,21 @@ const GET_USER_ATTENDED_EXAMS = gql`
   }
 `;
 
+// Updated mutation to match what the server expects
 const SUBMIT_EXAM_MUTATION = gql`
-  mutation SubmitExam($input: CreateScoreInput!) {
-    createScore(input: { score: $input }) {
+  mutation SubmitExam($examId: Int!, $userId: Int!, $percentage: Float!, $answers: String!) {
+    createScore(
+      input: {
+        score: {
+          examId: $examId
+          userId: $userId
+          percentage: $percentage
+          answers: $answers
+        }
+      }
+    ) {
       score {
         id
-        examId
-        userId
-        percentage
-        answers
       }
     }
   }
@@ -64,23 +71,22 @@ const ListExams = () => {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [timeLeft, setTimeLeft] = useState(0);
   const [error, setError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
   // Fetch all exams
-  const { 
-    loading: examsLoading, 
-    error: examsError, 
-    data: examsData,
-    refetch: refetchExams
-  } = useQuery(GET_ALL_EXAMS, {
-    fetchPolicy: 'network-only'
-  });
+  const {
+    loading: examsLoading,
+    error: examsError,
+    data: examsData
+  } = useQuery(GET_ALL_EXAMS);
 
   // Fetch user's attended exams
-  const { 
+  const {
     loading: attendedLoading,
     data: attendedData
   } = useQuery(GET_USER_ATTENDED_EXAMS, {
-    variables: { userId },
+    variables: { userId: parseInt(userId) },
     skip: !userId
   });
 
@@ -98,16 +104,37 @@ const ListExams = () => {
     return () => clearTimeout(timer);
   }, [selectedExam, timeLeft]);
 
-  // Start exam handler
+  // Handle starting an exam
   const handleStartExam = (exam) => {
-    if (!exam.questionsByExamId?.nodes?.length) {
+    // Make sure the exam has questions
+    const questions = exam.questionsByExamId?.nodes || [];
+    
+    if (questions.length === 0) {
       setError("This exam has no questions");
       return;
     }
 
+    // Format the questions properly
+    const formattedQuestions = questions.map(question => {
+      // Handle options - convert to array if needed
+      let options = [];
+      
+      if (typeof question.options === 'string') {
+        options = question.options.split(',').map(opt => opt.trim());
+      } else if (Array.isArray(question.options)) {
+        options = question.options;
+      }
+
+      return {
+        ...question,
+        options: options
+      };
+    });
+
+    // Set the exam and start the timer
     setSelectedExam({
       ...exam,
-      questions: exam.questionsByExamId.nodes
+      questions: formattedQuestions
     });
     setCurrentQuestionIndex(0);
     setSelectedAnswers({});
@@ -115,7 +142,7 @@ const ListExams = () => {
     setError(null);
   };
 
-  // Answer selection handler
+  // Handle answer selection
   const handleAnswerSelect = (questionIndex, answerIndex) => {
     setSelectedAnswers(prev => ({
       ...prev,
@@ -123,44 +150,74 @@ const ListExams = () => {
     }));
   };
 
-  // Exam submission handler
-  const handleSubmitExam = async () => {
-    try {
-      const totalQuestions = selectedExam.questions.length;
-      const correctAnswers = selectedExam.questions.reduce((count, question, index) => {
-        return count + (selectedAnswers[index] === question.correctAnswer ? 1 : 0);
-      }, 0);
-      
-      const percentage = Math.round((correctAnswers / totalQuestions) * 100);
-
-      await submitExam({
-        variables: {
-          input: {
-            userId,
-            examId: selectedExam.id,
-            percentage,
-            answers: JSON.stringify(selectedAnswers),
-            createdAt: new Date().toISOString()
-          }
-        }
-      });
-
-      await refetchExams();
-      navigate('/dashboard/scores');
-    } catch (err) {
-      setError(err.message);
-      console.error("Exam submission failed:", err);
+  // Confirm submission
+  const confirmSubmit = () => {
+    const answeredCount = Object.keys(selectedAnswers).length;
+    const totalQuestions = selectedExam.questions.length;
+    
+    if (answeredCount < totalQuestions) {
+      setShowSubmitConfirm(true);
+    } else {
+      handleSubmitExam();
     }
   };
 
-  // Check if user has attended an exam
+  // Submit the exam
+  const handleSubmitExam = async () => {
+    setIsSubmitting(true);
+    setShowSubmitConfirm(false);
+    
+    try {
+      const totalQuestions = selectedExam.questions.length;
+      let correctAnswers = 0;
+      
+      // Count correct answers
+      selectedExam.questions.forEach((question, index) => {
+        const userAnswer = selectedAnswers[index];
+        const correctAnswer = parseInt(question.correctAnswer);
+        
+        if (userAnswer === correctAnswer) {
+          correctAnswers++;
+        }
+      });
+  
+      // Calculate percentage score
+      const percentage = Math.round((correctAnswers / totalQuestions) * 100);
+      
+      // Submit the exam
+      await submitExam({
+        variables: {
+          examId: parseInt(selectedExam.id),
+          userId: parseInt(userId),
+          percentage: percentage,
+          answers: JSON.stringify(selectedAnswers)
+        }
+      });
+      
+      // Success! Navigate to scores
+      setSelectedExam(null);
+      navigate('/dashboard/scores');
+      
+    } catch (err) {
+      console.error("Error submitting exam:", err);
+      setError("Failed to submit exam. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Check if user has already taken this exam
   const hasAttendedExam = (examId) => {
-    return attendedData?.userById?.scoresByUserId?.nodes?.some(
+    if (!attendedData || !attendedData.userById || !attendedData.userById.scoresByUserId) {
+      return false;
+    }
+    
+    return attendedData.userById.scoresByUserId.nodes.some(
       score => score.examId === examId
     );
   };
 
-  // Loading and error states
+  // Loading state
   if (examsLoading || attendedLoading) {
     return (
       <div className="text-center p-4">
@@ -170,10 +227,11 @@ const ListExams = () => {
     );
   }
 
+  // Error state
   if (examsError) {
     return (
       <Alert variant="danger">
-        Error loading exams: {examsError.message}
+        Error loading exams. Please try again later.
       </Alert>
     );
   }
@@ -183,7 +241,7 @@ const ListExams = () => {
   return (
     <div className="list-exams-container">
       <h2 className="mb-4">Available Exams</h2>
-      
+
       {error && (
         <Alert variant="danger" onClose={() => setError(null)} dismissible>
           {error}
@@ -203,14 +261,14 @@ const ListExams = () => {
                   <span>Duration: {exam.duration} mins</span>
                   <span>Questions: {exam.questionsByExamId?.nodes?.length || 0}</span>
                 </div>
-                
+
                 {hasAttendedExam(exam.id) ? (
                   <Button variant="outline-secondary" disabled className="w-100">
                     Already Taken
                   </Button>
                 ) : (
-                  <Button 
-                    variant="primary" 
+                  <Button
+                    variant="primary"
                     onClick={() => handleStartExam(exam)}
                     className="w-100"
                     disabled={!exam.questionsByExamId?.nodes?.length}
@@ -241,7 +299,7 @@ const ListExams = () => {
               </span>
             </div>
           </Modal.Header>
-          
+
           <Modal.Body>
             <ProgressBar
               now={((currentQuestionIndex + 1) / selectedExam.questions.length) * 100}
@@ -285,22 +343,46 @@ const ListExams = () => {
               <Button
                 variant="primary"
                 onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
-                disabled={selectedAnswers[currentQuestionIndex] === undefined}
               >
                 Next
               </Button>
             ) : (
               <Button
                 variant="success"
-                onClick={handleSubmitExam}
-                disabled={Object.keys(selectedAnswers).length !== selectedExam.questions.length}
+                onClick={confirmSubmit}
+                disabled={isSubmitting}
               >
-                Submit Exam
+                {isSubmitting ? (
+                  <>
+                    <Spinner as="span" size="sm" animation="border" role="status" />
+                    <span className="ms-2">Submitting...</span>
+                  </>
+                ) : (
+                  'Submit Exam'
+                )}
               </Button>
             )}
           </Modal.Footer>
         </Modal>
       )}
+
+      {/* Confirmation Modal */}
+      <Modal show={showSubmitConfirm} onHide={() => setShowSubmitConfirm(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Submission</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          You haven't answered all questions. Do you still want to submit the exam?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowSubmitConfirm(false)}>
+            Continue Exam
+          </Button>
+          <Button variant="primary" onClick={handleSubmitExam}>
+            Submit Anyway
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

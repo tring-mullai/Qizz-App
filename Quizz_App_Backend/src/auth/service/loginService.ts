@@ -17,15 +17,13 @@ export const loginService = async (args: any) => {
     }
 
     const token = jwt.sign(
-        { userId: user.id },
+        { userId: user.id ,role:user.role},
         process.env.JWT_SECRET || "secret",
-        { expiresIn: '1h' } // Token will expire in 1 hour
-      );
-      
+        { expiresIn: '1h' }
+    );
 
     return {
         token,
-        user,
+        user
     };
 }
-

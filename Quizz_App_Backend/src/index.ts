@@ -4,10 +4,12 @@ import cors from 'cors';
 import { postgraphile } from 'postgraphile';
 import jwt from "jsonwebtoken";
 import { AddQuestionsPlugin } from './auth/plugin/AddQuestion';
-import { CreateExamWithQuestionsPlugin } from './auth/plugin/createExam';
-import { ExamAttendeesPlugin } from './auth/plugin/examAttendees';
-import { UpdateExamQuestionsPlugin } from './auth/plugin/updateExamQuestions';
+import { examPlugin } from './auth/plugin/createExam';
+import { attendeesPlugin } from './auth/plugin/examAttendees';
+import { updateExamPlugin } from './auth/plugin/updateExamQuestions';
 import { AppDataSource } from './db/ormconfig';
+import { authPlugin } from './auth/plugin/authPlugin';
+import {submitPlugin } from './auth/plugin/SubmitExamPlugin';
 
 const app = express();
 
@@ -50,63 +52,70 @@ app.use(
     graphiql: true,
     enhanceGraphiql: true,
     dynamicJson: true,
-    enableCors: false,
+    enableCors: true, // Allow frontend requests
     retryOnInitFail: true,
     appendPlugins: [
-      AddQuestionsPlugin,
-      CreateExamWithQuestionsPlugin,
-      ExamAttendeesPlugin,
-      UpdateExamQuestionsPlugin
+      authPlugin,
+      // AddQuestionsPlugin,
+      examPlugin,
+      attendeesPlugin,
+      updateExamPlugin,
+      submitPlugin
     ],
-    pgSettings: async (req) => {
+
+    additionalGraphQLContextFromRequest: async (req,res) => {
+      console.log('Checking authentication for a new request...');
       const authHeader = req.headers.authorization;
-      if (!authHeader) return {};
-      
-      try {
-        const token = authHeader.split(' ')[1];
-        
-        // Verify token signature
-        const { userId } = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
-        
-        // Check if user exists
-        const user = await getUserById(userId);
-        if (!user) {
-          return {};
-        }
-        
-        return {
-          'jwt.claims.user_id': userId
-        };
-      } catch (e) {
-        return {};
+      const operationName = req.body?.operationName
+
+      if(operationName === "guest")
+      {
+        return {req,res};
       }
-    },
-    additionalGraphQLContextFromRequest: async (req) => {
-      const authHeader = req.headers.authorization;
-      if (!authHeader) return {};
       
+      if (!authHeader) {
+        console.log('No Authorization header found.');
+        throw new Error("Valid token is required")
+      }
+    
       try {
         const token = authHeader.split(' ')[1];
-        
-        // Verify token signature
-        const decodedToken = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
-        
-        // Check if user exists
+    
+        // Ensure JWT_SECRET is defined
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+          throw new Error("JWT_SECRET is not defined in environment variables");
+        }
+    
+        // Verify token
+        const decodedToken = jwt.verify(token, secret) as { userId: number };
+    
+        console.log('User authenticated:', decodedToken);
+    
+        // Fetch user details
         const user = await getUserById(decodedToken.userId);
         if (!user) {
+          console.log('User not found.');
           return {};
         }
-        
+    
         return { user: decodedToken };
       } catch (e) {
+        if (e instanceof Error) {
+          console.log('Invalid token:', e.message);
+        } else {
+          console.log('An unknown error occurred');
+        }
         return {};
       }
     }
+    
   })
 );
 
-const PORT = process.env.PORT || 5001;
+
+const PORT =  5002;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`PostGraphile API: http://localhost:${PORT}/graphql`);
+  console.log(`PostGraphile API: http://localhost:${PORT}/graphiql`);
 });

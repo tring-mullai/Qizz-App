@@ -13,13 +13,14 @@ import { useAuth } from '../../../context/DashboardProvider'
 import './Login.css';
 
 const LOGIN_MUTATION = gql`
-  mutation Login($email: String!, $password: String!) {
+  mutation guest($email: String!, $password: String!) {
     login(email: $email, password: $password) {
       token
       user {
         id
         name
         email
+        role
       }
     }
   }
@@ -34,7 +35,7 @@ const Login = () => {
   const navigate = useNavigate();
   const [type, setType] = useState('password');
   const [icon, setIcon] = useState(<FaEyeSlash />);
-  const {login} = useAuth();
+  const { login } = useAuth();
   const [loginMutation] = useMutation(LOGIN_MUTATION);
 
   const handleToggle = () => {
@@ -54,25 +55,27 @@ const Login = () => {
   } = useForm({ resolver: yupResolver(schema) });
 
   const onSubmit = async (data) => {
+    console.log(data)
     try {
       const { data: loginData } = await loginMutation({
         variables: {
           email: data.email,
-          password: data.password
+          password: data.password,
+          role:data.role
         }
       });
-  
-      console.log('Login Response:', loginData); // Add this
-      
+
+      console.log('Login Response:', loginData);
+
       if (loginData.login.token) {
         login(loginData.login.token, loginData.login.user);
-        
-        // Verify storage immediately
+
+
         console.log('Stored Token:', localStorage.getItem('token'));
         console.log('Stored User:', localStorage.getItem('user'));
-        
+
         toast.success("Login successful!");
-        navigate('/dashboard', { replace: true }); // Remove setTimeout
+        navigate('/dashboard', { replace: true });
       }
     } catch (error) {
       console.error("Login Error:", error);

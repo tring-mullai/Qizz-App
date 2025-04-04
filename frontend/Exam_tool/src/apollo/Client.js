@@ -15,11 +15,11 @@ const authLink = setContext((_, { headers }) => {
   };
 });
 
-// Create the Apollo Client instance
+
 const client = new ApolloClient({
   link: authLink.concat(httpLink),
   cache: new InMemoryCache(),
 });
 
-// Named export instead of default export
+
 export { client };

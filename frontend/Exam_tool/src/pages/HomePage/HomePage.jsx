@@ -26,37 +26,40 @@ const DASHBOARD_QUERY = gql`
 const HomePage = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
+
+
+
     
-    // Get userId from authenticated user
     const userId = currentUser?.id;
+    const role = currentUser?.role;
 
     const { loading, error, data } = useQuery(DASHBOARD_QUERY, {
         variables: { userId },
         fetchPolicy: 'cache-and-network',
-        skip: !userId // Skip query if no user is logged in
+        skip: !userId
     });
 
     const calculateAverageScore = () => {
         if (!data?.userById?.scoresByUserId?.nodes?.length) return 0;
-        
+
         const scores = data.userById.scoresByUserId.nodes;
         const totalScore = scores.reduce((sum, score) => sum + score.percentage, 0);
         return (totalScore / scores.length).toFixed(1);
     };
 
-    if (!currentUser) {
-        return (
-            <Container fluid className="p-4 text-center">
-                <Spinner animation="border" />
-                <p>Loading user data...</p>
-            </Container>
-        );
-    }
+    // if (!currentUser) {
+    //     return (
+    //         <Container fluid className="p-4 text-center">
+    //             <Spinner animation="border" />
+    //             <p>Loading user data...</p>
+    //         </Container>
+    //     );
+    // }
 
     if (loading) return (
         <Container fluid className="p-4 text-center">
             <Spinner animation="border" role="status">
-                <span className="visually-hidden">Loading...</span>
+                {/* <span className="visually-hidden">Loading...</span> */}
             </Spinner>
         </Container>
     );
@@ -77,20 +80,28 @@ const HomePage = () => {
 
             <Row className="g-4">
                 <Col md={4}>
-                    <Card 
+
+                    {role === "student" && (
+                    <Card
                         className="text-center shadow-sm h-100 card-hover"
-                        onClick={() => navigate('/dashboard/list-exams')}
-                    >
+                        onClick={() => navigate('/dashboard/list-exams')}>
+
+
+
                         <Card.Body className="p-4">
                             <Card.Title className="display-4 mb-3">
                                 {data?.allExams?.totalCount || 0}
                             </Card.Title>
                             <Card.Text>Total Available Exams</Card.Text>
                         </Card.Body>
+
                     </Card>
+                    )}
                 </Col>
                 <Col md={4}>
-                    <Card 
+
+                {role === "admin" && (
+                    <Card
                         className="text-center shadow-sm h-100 card-hover"
                         onClick={() => navigate('/dashboard/my-exams')}
                     >
@@ -101,9 +112,11 @@ const HomePage = () => {
                             <Card.Text>My Created Exams</Card.Text>
                         </Card.Body>
                     </Card>
+                )}
                 </Col>
                 <Col md={4}>
-                    <Card 
+                {role === 'student' && (
+                    <Card
                         className="text-center shadow-sm h-100 card-hover"
                         onClick={() => navigate('/dashboard/scores')}
                     >
@@ -114,6 +127,7 @@ const HomePage = () => {
                             <Card.Text>Average Score</Card.Text>
                         </Card.Body>
                     </Card>
+                )}
                 </Col>
             </Row>
         </Container>

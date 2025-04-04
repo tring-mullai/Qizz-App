@@ -1,8 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany ,JoinColumn} from 'typeorm';
 import { User } from './User';
 import { Question } from './Question';
+import {Score} from './Score'
 
-@Entity('Exam')
+@Entity('Exams')
 export class Exam {
   @PrimaryGeneratedColumn()
   id!: number;
@@ -17,8 +18,23 @@ export class Exam {
   duration!: number; 
 
   @ManyToOne(() => User, user => user.exams)
+  @JoinColumn({ name: "creatorId" })
   creator!: User;
 
-  @OneToMany(() => Question, question => question.exam, { cascade: true })
+  @Column()
+  creatorId!: number;
+
+  @OneToMany(() => Question, question => question.exam, { 
+    cascade: true, 
+    onDelete: 'CASCADE'
+  })
   questions!: Question[];
+
+  @OneToMany(() => Score, (score) => score.exam,
+{
+  cascade: true, 
+    onDelete: 'CASCADE'
+
+})
+  scores!: Score[];
 }
