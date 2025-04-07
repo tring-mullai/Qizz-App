@@ -1,0 +1,47 @@
+.section_statement
+{
+    margin-top: 4%;
+    margin-left: 12%;
+}
+
+.main_content
+{
+    
+    font-weight: lighter;
+    color: grey;
+    font-family: 'roboto';
+    font-size: 30px;
+
+}
+
+.statement_content
+{
+   
+    margin-top: 3%;
+}
+
+.statement_image1
+{
+    margin-right: 4%;
+}
+
+.statement_content_1
+{
+    width: 300px;
+    padding-top: 2%;
+    
+}
+
+.statement_content_2
+{
+    width: 300px;
+    margin-left: 2%;
+    padding-top: 2%;
+    
+}
+
+.statement_image2
+{
+    margin-left: 11%;
+}
+

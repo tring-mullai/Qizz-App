@@ -1,9 +1,12 @@
-
-
 import React from 'react';
+import Frame from '../Frame/Frame'
+import About from '../About/About'
+import Statement from '../Statement/Statement'
+import Projects from '../Projects/Projects'
+import Footer from '../../components/footer/Footer'
+import { Container } from 'react-bootstrap';
 import './Home.css';
 import { Link } from 'react-router-dom';
-
 
 const Home = () => {
   return (
@@ -29,6 +32,21 @@ const Home = () => {
           </div>
         </div>
       </div>
+
+      <div>
+    <Container>
+    
+      <Frame/>
+      <About/>
+      <Statement/>
+      <Projects/>
+      
+    
+    </Container>
+    <Footer/>
+    
+    
+    </div>
 
       
     </div>

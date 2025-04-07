@@ -3,6 +3,7 @@ import { useQuery, gql } from '@apollo/client';
 import { Button, Modal, Spinner, Alert, Card, Badge } from 'react-bootstrap';
 import { useAuth } from '../../context/DashboardProvider';
 import { useNavigate } from 'react-router-dom';
+import './Scores.css'
 
 // GraphQL query to get user scores
 const GET_USER_SCORES = gql`
@@ -146,7 +147,7 @@ const Scores = () => {
     <div className="container py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>Your Exam Results</h2>
-        <Button variant="outline-primary" onClick={() => navigate('/dashboard')}>
+        <Button variant="outline-primary card-button-exam" onClick={() => navigate('/dashboard')}>
           Back to Dashboard
         </Button>
       </div>
@@ -158,7 +159,7 @@ const Scores = () => {
       )}
 
       {stats && (
-        <Card className="mb-4 bg-light">
+        <Card className="mb-4 bg-light card-hover">
           <Card.Body>
             <Card.Title>Your Performance</Card.Title>
             <div className="row">
@@ -203,7 +204,8 @@ const Scores = () => {
                     {new Date(score.submitDate).toLocaleDateString()}
                   </td>
                   <td>
-                    <Button 
+                    <Button  
+                    className='card-button-exam'
                       variant="primary" 
                       size="sm"
                       onClick={() => handleViewExam(score)}

@@ -3,6 +3,7 @@ import { Button, Card, Modal, Form, Dropdown, Spinner, Alert } from 'react-boots
 import { useMutation, useQuery, gql } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from "../../context/DashboardProvider";
+import './CreateExam.css'
 const GET_MY_EXAMS = gql`
   query MyExams($creatorId: Int!) {
     allExams(condition: { creatorId: $creatorId }) {
@@ -388,8 +389,8 @@ const CreateExam = () => {
 
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>Manage Exams</h2>
-        <Button
-          variant="primary"
+        <Button className='card-button-exam'
+          
           onClick={() => {
             setCurrentExam({
               id: null,
@@ -416,7 +417,7 @@ const CreateExam = () => {
           {examsData.allExams.nodes.map((exam) => (
             <div key={exam.id} className="col-md-6 col-lg-4 mb-4">
               <Card
-                className="h-100"
+                className="h-100 card-hover"
                 style={{ cursor: 'pointer' }}
                 onClick={() => handleViewAttendees(exam)}
               >
@@ -430,7 +431,7 @@ const CreateExam = () => {
                   </Card.Text>
 
                   <div className="d-flex justify-content-between align-items-center">
-                    <Button
+                    <Button className='create-exam'
                       variant="outline-primary"
                       size="sm"
                       onClick={(e) => {
@@ -558,7 +559,7 @@ const CreateExam = () => {
                 Cancel
               </Button>
               <Button
-                variant="primary"
+                className='card-button-exam'
                 type="submit"
                 disabled={isSubmitting || currentExam.questions.length === 0}
               >

@@ -1,0 +1,58 @@
+.section_about
+{
+    margin-left: 12%;
+    margin-top: 2%;
+    font-family: sans-serif;
+}
+
+.image_about_1
+{
+    margin-right: 30px;
+    
+}
+
+.first
+{
+    margin-bottom: 10%;
+}
+
+.image_about_2
+{
+    margin-top: 4%; 
+}
+
+.about_name
+{
+    font-weight: lighter;
+    color: grey; 
+}
+
+.section_content
+{
+    margin-left: 4%;
+}
+
+.about_content
+{ 
+    margin-top: 1%;
+    width: 450px;
+    
+}
+
+.read_more
+{
+    color: rgb(170, 166, 166);
+    font-weight: lighter;
+    margin-top: 13%;
+    margin-left: 5%;
+}
+
+p{
+    font-family: sans-serif;
+    font-size: 22px;
+}
+
+
+
+
+

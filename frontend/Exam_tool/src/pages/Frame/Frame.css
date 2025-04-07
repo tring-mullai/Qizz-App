@@ -1,0 +1,33 @@
+.frame
+{
+    margin-left: 13%;
+}
+.frame_img
+{
+    height: 85vh;
+    margin-right: 12%;
+    width: 750px;
+    margin-left: 4%;
+}
+
+
+
+.project
+{
+    color: grey;
+    font-weight: lighter;
+    font-size: 63px; 
+} 
+
+.lorum
+{
+    font-weight: bolder;
+    font-size: 50px;
+    
+}
+
+.arrow_1
+{
+    padding-top: 170px;
+    padding-bottom: 20px; 
+}

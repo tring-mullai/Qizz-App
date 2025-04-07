@@ -3,7 +3,7 @@ import { useQuery, useMutation, gql } from '@apollo/client';
 import { Card, Button, Modal, ProgressBar, Form, Spinner, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/DashboardProvider';
-import './ListExams.css';
+import './ListExams.css'
 
 // GraphQL queries and mutations
 const GET_ALL_EXAMS = gql`
@@ -253,7 +253,7 @@ const ListExams = () => {
       ) : (
         <div className="exam-grid">
           {exams.map((exam) => (
-            <Card key={exam.id} className="exam-card">
+            <Card key={exam.id} className="card-hover">
               <Card.Body>
                 <Card.Title>{exam.title}</Card.Title>
                 <Card.Text className="text-muted">{exam.description}</Card.Text>
@@ -268,7 +268,7 @@ const ListExams = () => {
                   </Button>
                 ) : (
                   <Button
-                    variant="primary"
+                    variant="primary card-button-exam"
                     onClick={() => handleStartExam(exam)}
                     className="w-100"
                     disabled={!exam.questionsByExamId?.nodes?.length}
@@ -332,7 +332,7 @@ const ListExams = () => {
 
           <Modal.Footer>
             <Button
-              variant="outline-secondary"
+              variant="outline-secondary card-button-exam"
               onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
               disabled={currentQuestionIndex === 0}
             >
@@ -348,7 +348,7 @@ const ListExams = () => {
               </Button>
             ) : (
               <Button
-                variant="success"
+                variant="success card-button-exam"
                 onClick={confirmSubmit}
                 disabled={isSubmitting}
               >

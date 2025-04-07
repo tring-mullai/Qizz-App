@@ -1,0 +1,89 @@
+.section_projects
+{
+    margin-left: 12%;
+}
+
+.project_heading
+{
+    margin-top: 3%;
+    color: grey;
+    font-weight: lighter;
+    font-family: 'roboto';
+}
+
+
+
+.projects_image_1
+{
+    width: 450px;
+    
+}
+
+.projects_image_2
+{
+    margin-right:19%;
+    
+    width: 450px;
+}
+
+.projects_images{
+    background-image: url('../../assets/projects_img_1.png');
+    background-repeat: no-repeat;
+    background-size: 450px;
+    margin-top: 2%;
+    position: relative;
+  }
+  
+  .overlay {
+   display: flex;
+   justify-content:start;
+   width: 100%;
+  }
+
+  .sample_project
+  {
+    color: white;
+    padding-left: 60px;
+    padding-top: 40px;
+    font-weight: bold;
+    
+  }
+
+  .view_more
+  {
+    color: white;
+    font-weight: lighter;
+    padding-left: 90px;
+  }
+
+  .project_images_1
+  {
+    margin-top: 2%;
+  }
+
+  .projects_img_3
+  {
+    margin-right: 2%;
+
+  }
+
+  .projects_img_4
+  {
+    margin-left: 7%;
+    height: 255px;
+    width: 400px;
+  }
+
+  .projects_img_5
+  {
+    margin-left: 20%;
+    width: 250px;
+    height: 255px;
+    
+  }
+
+
+
+
+  
+
